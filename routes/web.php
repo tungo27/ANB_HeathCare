@@ -8,4 +8,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 Route::get('/register', [UserController::class, 'Getregister']);        
-Route::post('/register', [UserController::class, 'Register']);        
+Route::post('/register', [UserController::class, 'Register']);    
+Route::get('/login', [UserController::class, 'Showlogin']);   
+Route::post('/login', [UserController::class, 'login']); 
