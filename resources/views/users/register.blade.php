@@ -16,7 +16,7 @@
                                 <span class="input-group-text bg-white text-muted border-end-0">
                                     <i class="fas fa-user"></i>
                                 </span>
-                                <input type="text" name="name" class="form-control form-control-lg border-start-0 ps-0" placeholder="Nhập tên" required style="font-size: 0.9rem;">
+                                <input type="text" name="full_name" class="form-control form-control-lg border-start-0 ps-0" placeholder="Nhập tên" required style="font-size: 0.9rem;">
                             </div>
                         </div>
 
