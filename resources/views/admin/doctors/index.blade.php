@@ -42,14 +42,16 @@
                             <td>{{ $doctor->years_of_experience }} năm</td>
                             <td>{{ $doctor->user->phone ?? 'Chưa có số' }}</td>
                             <td style="text-align: right;">
-                                <a href="{{ route('admin.doctors.edit', $doctor->id) }}" class="btn-text-primary">Sửa</a>
 
-                                <form action="{{ route('admin.doctors.destroy', $doctor->id) }}" method="POST"
-                                    class="delete-form" style="display: inline-block;"
+                                <a href="{{ isset($doctor->user->id) ? route('admin.doctors.edit', ['doctor' => $doctor->user->id]) : '#' }}"
+                                    class="btn-text-primary">Sửa</a>
+
+
+                                <form
+                                    action="{{ isset($doctor->user->id) ? route('admin.doctors.destroy', ['doctor' => $doctor->user->id]) : '#' }}"
+                                    method="POST" class="delete-form" style="display: inline-block;"
                                     onsubmit="return confirm('Bạn có chắc chắn muốn xóa bác sĩ này?');">
                                     @csrf
-                                    {{-- Lưu ý: Vì bạn yêu cầu đổi route sang GET/POST,
-                                         hãy đảm bảo @method('DELETE') khớp với Route đã khai báo --}}
                                     @method('DELETE')
                                     <button type="submit" class="btn-text-danger">Xóa</button>
                                 </form>

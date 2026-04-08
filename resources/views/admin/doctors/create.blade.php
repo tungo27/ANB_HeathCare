@@ -33,10 +33,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {{-- Họ và Tên --}}
                         <div class="form-group">
-                            <label for="name" class="form-label block font-medium text-gray-700">Họ và Tên</label>
-                            <input type="text" name="name" id="name" value="{{ old('name') }}" required
+                            <label for="full_name" class="form-label block font-medium text-gray-700">Họ và Tên</label>
+                            <input type="text" name="full_name" id="full_name" value="{{ old('full_name') }}" required
                                 class="form-control w-full mt-1 border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            @error('name')
+                            @error('full_name')
                                 <p class="form-error text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>

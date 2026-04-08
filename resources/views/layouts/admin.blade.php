@@ -7,19 +7,19 @@
     <base href="{{ asset('') }}">
     </base>
 
-    <link rel="stylesheet" href="resources/css/app.css">
-    <link rel="stylesheet" href="resources/css/doctor.css">
+    {{-- Nạp file CSS chung của layout --}}
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 
     @stack('styles')
 </head>
 
 <body>
     <div class="admin-wrapper">
-        @yield('content') {{-- Nội dung chính sẽ nằm ở đây --}}
+        @yield('content') 
     </div>
 
-    <script src="resources/app.js"></script>
-    <script src="resources/doctor.js"></script>
+    {{-- Nạp file JS chung của layout --}}
+    <script src="{{ asset('js/app.js') }}"></script>
 
     @stack('scripts')
 </body>

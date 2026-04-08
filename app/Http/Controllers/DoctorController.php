@@ -36,85 +36,90 @@ class DoctorController extends Controller
         return view('admin.doctors.create', compact('specialties'));
     }
 
-    public function store()
-    // public function store(StoreDoctorRequest $request)
+    public function store(StoreDoctorRequest $request)
     {
-        // try {
-        //     DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        //     // Bước 1: Tạo record User mới
-        //     $user = User::create([
-        //         'name'     => $request->name,
-        //         'email'    => $request->email,
-        //         'password' => Hash::make('password123'),
-        //     ]);
+            // 1. Tạo User (Lưu ý: Đổi 'name' thành 'full_name' nếu DB của bạn dùng full_name)
+            $user = User::create([
+                'full_name' => $request->full_name,
+                'email'     => $request->email,
+                'password'  => Hash::make('password123'), // Nên để mặc định hoặc cho phép nhập
+            ]);
 
-        //     // Bước 2: Gán quyền (Cần đảm bảo package Spatie Permission đã được setup)
-        //     $user->assignRole('Doctor');
+            // 2. Gán Role (Đảm bảo Role 'Doctor' đã tồn tại trong DB)
+            if ($user) {
+                $user->assignRole('Doctor');
+            }
 
-        //     // Bước 3: Tạo record Doctor map với $user->id vừa tạo
-        //     Doctor::create([
-        //         'user_id'      => $user->id,
-        //         'specialty_id' => $request->specialty_id,
-        //         'qualification'       => $request->qualification,
-        //         'years_of_experience' => $request->years_of_experience,
-        //         'consultation_fee'    => $request->consultation_fee,
-        //         'bio'          => $request->bio,
-        //     ]);
+            // 3. Tạo Doctor 
+            // Vì bạn dùng $primaryKey = 'user_id' và $incrementing = false
+            // Chúng ta truyền trực tiếp user_id vào
+            Doctor::create([
+                'user_id'             => $user->id,
+                'specialty_id'        => $request->specialty_id,
+                'qualification'       => $request->qualification,
+                'years_of_experience' => $request->years_of_experience,
+                'consultation_fee'    => $request->consultation_fee,
+                'bio'                 => $request->bio,
+            ]);
 
-        //     DB::commit();
-        //     return redirect()->route('admin.doctors.index')->with('success', 'Bác sĩ đã được thêm thành công.');
-        // } catch (Exception $e) {
-        //     DB::rollBack();
-        //     Log::error('Lỗi khi tạo Bác sĩ: ' . $e->getMessage());
+            DB::commit();
+            return redirect()->route('admin.doctors.index')->with('success', 'Bác sĩ đã được thêm thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi tạo Bác sĩ: ' . $e->getMessage());
 
-        //     return back()->withInput()->with('error', 'Có lỗi xảy ra khi tạo bác sĩ. Vui lòng kiểm tra lại!');
-        // }
+            // Trả về kèm thông báo lỗi cụ thể để debug
+            return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
+        }
     }
 
-    public function edit()
-    // public function edit(Doctor $doctor)
+    public function edit(Doctor $doctor)
     {
-        // $specialties = Specialty::all();
-        // return view('admin.doctors.edit', compact('doctor', 'specialties'));
+
+
+        $specialties = Specialty::all();
+        return view('admin.doctors.edit', compact('doctor', 'specialties'));
     }
 
-    public function update()
-    // public function update(UpdateDoctorRequest $request, Doctor $doctor)
+    public function update(UpdateDoctorRequest $request, Doctor $doctor)
     {
-        // try {
-        //     DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        //     // Cập nhật thông tin User
-        //     $doctor->user->update([
-        //         'name'  => $request->name,
-        //         'email' => $request->email,
-        //     ]);
+            // 1. Cập nhật thông tin User (Bảng users)
+            // Dùng $doctor->user sẽ trả về instance của User nhờ quan hệ belongsTo
+            $doctor->user->update([
+                'full_name'  => $request->full_name,
+                'email' => $request->email,
+            ]);
 
-        //     // Cập nhật thông tin Doctor
-        //     $doctor->update([
-        //         'specialty_id' => $request->specialty_id,
-        //         'qualification'       => $request->qualification,
-        //         'years_of_experience' => $request->years_of_experience,
-        //         'consultation_fee'    => $request->consultation_fee,
-        //         'bio'          => $request->bio,
-        //     ]);
+            // 2. Cập nhật thông tin Doctor (Bảng doctors)
+            // Khi đã khai báo $primaryKey là user_id, hàm này sẽ chạy đúng
+            $doctor->update([
+                'specialty_id'        => $request->specialty_id,
+                'qualification'       => $request->qualification,
+                'years_of_experience' => $request->years_of_experience,
+                'consultation_fee'    => $request->consultation_fee,
+                'bio'                 => $request->bio,
+            ]);
 
-        //     DB::commit();
-        //     return redirect()->route('admin.doctors.index')->with('success', 'Cập nhật hồ sơ bác sĩ thành công.');
-        // } catch (Exception $e) {
-        //     DB::rollBack();
-        //     Log::error('Lỗi khi cập nhật Bác sĩ: ' . $e->getMessage());
-        //     return back()->withInput()->with('error', 'Lỗi cập nhật. Vui lòng thử lại!');
-        // }
+            DB::commit();
+            return redirect()->route('admin.doctors.index')->with('success', 'Cập nhật thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi cập nhật Bác sĩ: ' . $e->getMessage()); //
+            return back()->withInput()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 
-    // public function destroy(Doctor $doctor)
-    public function destroy()
+    public function destroy(Doctor $doctor)
     {
-        // // Logic theo yêu cầu: Chỉ xóa record Doctor (Soft/Hard delete tùy thuộc migration)
-        // $doctor->delete();
+        // Logic theo yêu cầu: Chỉ xóa record Doctor (Soft/Hard delete tùy thuộc migration)
+        $doctor->delete();
 
-        // return redirect()->route('admin.doctors.index')->with('success', 'Đã xóa hồ sơ Bác sĩ thành công.');
+        return redirect()->route('admin.doctors.index')->with('success', 'Đã xóa hồ sơ Bác sĩ thành công.');
     }
 }

@@ -15,18 +15,24 @@
             @if (session('error'))
                 <div class="alert-danger">{{ session('error') }}</div>
             @endif
-
-            <form action="{{ route('admin.doctors.update', $doctor->id) }}" method="POST">
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form action="{{ route('admin.doctors.update', $doctor) }}" method="POST">
                 @csrf
-                {{-- Lưu ý: Vì bạn đã chuyển route sang POST thủ công ở câu hỏi trước,
-                     bạn có thể bỏ @method('PUT') nếu route trong web.php là Route::post --}}
                 @method('PUT')
 
                 <div class="form-group">
-                    <label for="name" class="form-label">Họ và Tên</label>
-                    <input type="text" name="name" id="name" value="{{ old('name', $doctor->user->full_name) }}"
-                        required class="form-control">
-                    @error('name')
+                    <label for="full_name" class="form-label">Họ và Tên</label>
+                    <input type="text" name="full_name" id="full_name"
+                        value="{{ old('full_name', $doctor->user->full_name) }}" required class="form-control">
+                    @error('full_name')
                         <span class="form-error">{{ $message }}</span>
                     @enderror
                 </div>

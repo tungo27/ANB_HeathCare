@@ -24,7 +24,7 @@ class UpdateDoctorRequest extends FormRequest
         $userId = $doctor instanceof \App\Models\Doctor ? $doctor->user_id : \App\Models\Doctor::find($doctor)?->user_id;
 
         return [
-            'name'         => ['required', 'string', 'max:255'],
+            'full_name'         => ['required', 'string', 'max:255'],
             'email'        => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'specialty_id' => ['required', 'exists:specialties,id'],
             'qualification'       => ['required', 'string', 'max:255'],
