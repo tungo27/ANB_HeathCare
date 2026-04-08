@@ -22,8 +22,10 @@ class StoreDoctorRequest extends FormRequest
         return [
             'name'         => ['required', 'string', 'max:255'],
             'email'        => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'phone'        => ['required', 'string', 'max:20'],
             'specialty_id' => ['required', 'exists:specialties,id'],
+            'qualification'       => ['required', 'string', 'max:255'],
+            'years_of_experience' => ['required', 'integer', 'min:0'],
+            'consultation_fee'    => ['required', 'numeric', 'min:0'],
             'bio'          => ['nullable', 'string'],
         ];
     }

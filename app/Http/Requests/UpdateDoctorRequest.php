@@ -20,13 +20,16 @@ class UpdateDoctorRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('doctor') ? $this->route('doctor')->user_id : null;
+        $doctor = $this->route('doctor');
+        $userId = $doctor instanceof \App\Models\Doctor ? $doctor->user_id : \App\Models\Doctor::find($doctor)?->user_id;
 
         return [
             'name'         => ['required', 'string', 'max:255'],
             'email'        => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'phone'        => ['required', 'string', 'max:20'],
             'specialty_id' => ['required', 'exists:specialties,id'],
+            'qualification'       => ['required', 'string', 'max:255'],
+            'years_of_experience' => ['required', 'integer', 'min:0'],
+            'consultation_fee'    => ['required', 'numeric', 'min:0'],
             'bio'          => ['nullable', 'string'],
         ];
     }
