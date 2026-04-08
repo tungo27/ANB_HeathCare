@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('full_name', 100);
             $table->string('phone', 15)->nullable();
             $table->text('avatar_url')->nullable();
+            $table->string('image_public_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
