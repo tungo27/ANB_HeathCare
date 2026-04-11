@@ -17,6 +17,18 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+
+    protected $fillable = [
+        'email',
+        'password',
+        'role',
+        'full_name',
+        'phone',
+        'avatar_url',
+        'image_public_id',
+        'is_active',
+    ];
     /**
      * Get the attributes that should be cast.
      *
@@ -30,12 +42,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public $timestamps = true;
-    /**
-     * Get the doctor record associated with the user.
-     */
-    public function doctor(): HasOne
+
+    public function isAdmin(): bool
     {
-        return $this->hasOne(Doctor::class);
+        return $this->role === 'admin';
+    }
+
+    public function isDoctor(): bool
+    {
+        return $this->role === 'doctor';
+    }
+
+    public function isPatient(): bool
+    {
+        return $this->role === 'patient';
     }
 }

@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-
-class DoctorController extends Controller
+class PatientController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('doctor.dashboard');
+        return view('patient.dashboard');
     }
 }
