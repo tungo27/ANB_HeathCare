@@ -1,31 +1,39 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Hệ thống Quản lý')</title>
-    <base href="{{ asset('') }}">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>{{ config('app.name', 'Laravel') }}</title>
 
-    {{-- Nạp file CSS chung của dự án --}}
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    @stack('styles')
+    <!-- Scripts -->
+    @vite(['public/css/app.css', 'public/js/app.js'])
 </head>
 
-<body>
-    <div class="admin-wrapper">
-        @yield('content')
+<body class="font-sans antialiased">
+    <div class="min-h-screen bg-gray-100">
+        @include('layouts.navigation')
+
+        <!-- Page Heading -->
+        @isset($header)
+            <header class="bg-white shadow">
+                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    {{ $header }}
+                </div>
+            </header>
+        @endisset
+
+        <!-- Page Content -->
+        <main>
+            @yield('content')
+        </main>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-    {{-- Nạp file JS chung của dự án --}}
-    <script src="{{ asset('js/app.js') }}"></script>
-
-    @stack('scripts')
 </body>
 
 </html>

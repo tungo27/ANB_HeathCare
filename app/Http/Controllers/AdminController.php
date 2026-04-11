@@ -103,6 +103,7 @@ class AdminController extends Controller
             // Dùng $doctor->user sẽ trả về instance của User nhờ quan hệ belongsTo
             $doctor->user->update([
                 'full_name'  => $request->full_name,
+                'phone'      => $request->phone,
                 'email' => $request->email,
             ]);
 
