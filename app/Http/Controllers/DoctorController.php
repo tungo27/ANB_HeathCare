@@ -41,19 +41,16 @@ class DoctorController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Tạo User (Lưu ý: Đổi 'name' thành 'full_name' nếu DB của bạn dùng full_name)
+            // 1. Tạo User và gán role trực tiếp
             $user = User::create([
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
-                'password'  => Hash::make('password123'), // Nên để mặc định hoặc cho phép nhập
+                'phone'     => $request->phone,
+                'password'  => Hash::make($request->password),
+                'role'      => 'doctor',
             ]);
 
-            // 2. Gán Role (Đảm bảo Role 'Doctor' đã tồn tại trong DB)
-            if ($user) {
-                $user->assignRole('Doctor');
-            }
-
-            // 3. Tạo Doctor 
+            // 2. Tạo Doctor
             // Vì bạn dùng $primaryKey = 'user_id' và $incrementing = false
             // Chúng ta truyền trực tiếp user_id vào
             Doctor::create([
@@ -93,7 +90,8 @@ class DoctorController extends Controller
             // Dùng $doctor->user sẽ trả về instance của User nhờ quan hệ belongsTo
             $doctor->user->update([
                 'full_name'  => $request->full_name,
-                'email' => $request->email,
+                'email'      => $request->email,
+                'phone'      => $request->phone,
             ]);
 
             // 2. Cập nhật thông tin Doctor (Bảng doctors)
@@ -117,9 +115,24 @@ class DoctorController extends Controller
 
     public function destroy(Doctor $doctor)
     {
-        // Logic theo yêu cầu: Chỉ xóa record Doctor (Soft/Hard delete tùy thuộc migration)
-        $doctor->delete();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('admin.doctors.index')->with('success', 'Đã xóa hồ sơ Bác sĩ thành công.');
+            // Lấy thông tin user liên kết
+            $user = $doctor->user;
+
+            // Xóa hồ sơ bác sĩ trước, sau đó xóa user liên kết
+            $doctor->delete();
+            if ($user) {
+                $user->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('admin.doctors.index')->with('success', 'Đã xóa hồ sơ Bác sĩ thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi xóa Bác sĩ: ' . $e->getMessage());
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 }
