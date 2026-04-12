@@ -8,32 +8,52 @@
 
     <title>{{ config('app.name', 'Laravel') }}</title>
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
-    @vite(['public/css/app.css', 'public/js/app.js'])
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
+<body class="bg-light">
+    <div class="min-vh-100 d-flex flex-column">
+
+        {{-- Navigation Bar --}}
         @include('layouts.navigation')
 
-        <!-- Page Heading -->
         @isset($header)
-            <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    {{ $header }}
+            <header class="bg-white border-bottom shadow-sm py-4 mb-4">
+                <div class="container">
+                    <h1 class="h4 mb-0 text-dark fw-bold">
+                        {{ $header }}
+                    </h1>
                 </div>
             </header>
         @endisset
 
-        <!-- Page Content -->
-        <main>
-            @yield('content')
+        <main class="container py-3 flex-grow-1">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    {{-- Ưu tiên sử dụng @yield('content') cho các trang truyền thống --}}
+                    @yield('content')
+
+                    {{-- Hỗ trợ thêm $slot nếu bạn sử dụng Blade Components (Breeze default) --}}
+                    {{ $slot ?? '' }}
+                </div>
+            </div>
         </main>
+
+        <footer class="py-3 bg-white border-top mt-auto">
+            <div class="container text-center">
+                <p class="text-muted small mb-0">
+                    &copy; {{ date('Y') }} {{ config('app.name') }}. Bảo lưu mọi quyền.
+                </p>
+            </div>
+        </footer>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
