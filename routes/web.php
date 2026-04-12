@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\SpecialytiesController;
 
@@ -52,11 +53,13 @@ Route::prefix('admin')
     });
 
 // 5. NHÓM DOCTOR
-Route::prefix('doctor')
-    ->middleware(['auth', 'role:doctor'])
+Route::middleware(['auth', 'role:doctor'])
+    ->prefix('doctor')
     ->name('doctor.')
     ->group(function () {
-        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Dashboard
+        Route::get('/', [DoctorController::class, 'index'])->name('dashboard');
     });
 
 // 6. NHÓM PATIENT

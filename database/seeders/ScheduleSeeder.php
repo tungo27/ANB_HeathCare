@@ -14,30 +14,30 @@ class ScheduleSeeder extends Seeder
 
         DB::table('schedules')->insert([
             [
-                'doctor_id'    => $doctor1,
+                'user_id'    => $doctor1,
                 'room'         => '101',
                 'work_date'    => '2026-04-10',
                 'start_time'   => '08:00:00',
                 'end_time'     => '12:00:00',
-                'slot_duration'=> 30,
+                'slot_duration' => 30,
                 'max_patients' => 10,
             ],
             [
-                'doctor_id'    => $doctor1,
+                'user_id'    => $doctor1,
                 'room'         => '102',
                 'work_date'    => '2026-04-11',
                 'start_time'   => '13:00:00',
                 'end_time'     => '17:00:00',
-                'slot_duration'=> 30,
+                'slot_duration' => 30,
                 'max_patients' => 10,
             ],
             [
-                'doctor_id'    => $doctor2,
+                'user_id'    => $doctor2,
                 'room'         => '201',
                 'work_date'    => '2026-04-10',
                 'start_time'   => '09:00:00',
                 'end_time'     => '15:00:00',
-                'slot_duration'=> 30,
+                'slot_duration' => 30,
                 'max_patients' => 12,
             ],
         ]);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('schedules', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('doctor_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('room', 50)->nullable();
             $table->date('work_date');
             $table->time('start_time');
@@ -22,10 +22,10 @@ return new class extends Migration
             $table->integer('max_patients')->default(10);
             $table->boolean('is_available')->default(true);
 
-            $table->unique(['doctor_id', 'work_date', 'start_time'], 'uq_doctor_slot');
+            $table->unique(['user_id', 'work_date', 'start_time'], 'uq_doctor_slot');
             $table->unique(['room', 'work_date', 'start_time'], 'uq_room_slot');
 
-            $table->foreign('doctor_id')
+            $table->foreign('user_id')
                 ->references('user_id')->on('doctors')
                 ->onDelete('cascade');
         });

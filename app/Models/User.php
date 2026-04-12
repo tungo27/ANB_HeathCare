@@ -50,7 +50,11 @@ class User extends Authenticatable
     {
         return $this->role === 'doctor';
     }
-
+    public function doctor()
+    {
+        // Giả sử bạn có model Doctor
+        return $this->hasOne(Doctor::class);
+    }
     public function isPatient(): bool
     {
         return $this->role === 'patient';

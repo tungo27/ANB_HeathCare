@@ -48,7 +48,8 @@ class AdminController extends Controller
         return view('admin.doctors.create', compact('specialties'));
     }
 
-    public function doctorStore(StoreDoctorRequest $request)
+    // Tạm thời đổi StoreDoctorRequest thành Request để xem có phải lỗi do Validate ẩn không
+    public function doctorStore(Request $request)
     {
         try {
             DB::beginTransaction();
@@ -58,7 +59,7 @@ class AdminController extends Controller
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
                 'phone'     => $request->phone,
-                'password'  => Hash::make('password123'),
+                'password'  => Hash::make('minhtu111'),
                 'role'      => 'doctor',
             ]);
 
@@ -81,8 +82,10 @@ class AdminController extends Controller
             DB::rollBack();
             Log::error('Lỗi khi tạo Bác sĩ: ' . $e->getMessage());
 
-            // Trả về kèm thông báo lỗi cụ thể để debug
-            return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
+            // TẠM THỜI IN THẲNG LỖI RA MÀN HÌNH TRÌNH DUYỆT ĐỂ KIỂM TRA:
+            dd('Lỗi Database khi lưu:', $e->getMessage(), 'Dữ liệu gửi lên:', $request->all());
+
+            // return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
 
