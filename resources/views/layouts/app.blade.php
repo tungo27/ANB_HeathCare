@@ -16,7 +16,16 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
-            @include('layouts.navigation')
+            @if(Auth::user()->role === 'patient')
+                @include('components.header-patient')
+            @endif
+            {{-- @if(Auth::user()->role === 'doctor')
+                @include('components.header-doctor')
+            @endif --}}
+            @if(Auth::user()->role === 'admin')
+                @include('layouts.navigation')
+            @endif
+                
 
             <!-- Page Heading -->
             @isset($header)
@@ -31,6 +40,8 @@
             <main>
                 @yield('content')
             </main>
+
+            
         </div>
     </body>
 </html>
