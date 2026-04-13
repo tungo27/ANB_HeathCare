@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Doctor;
 use App\Models\User;
 use App\Models\Specialties;
+use App\Models\Appointment;
 use App\Http\Requests\StoreDoctorRequest;
 use App\Http\Requests\UpdateDoctorRequest;
 use Illuminate\Support\Facades\DB;
@@ -18,13 +19,13 @@ class AdminController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('admin.dashboard');
+        return view('admin.dashboard', [
+            'totalDoctors'        => Doctor::count(),
+            'todayPatients'       => Appointment::whereDate('appointment_date', today())->distinct('patient_id')->count(),
+            'pendingAppointments' => Appointment::where('status', 'pending')->count(),
+            'recentDoctors'       => Doctor::with(['user', 'specialty'])->latest('user_id')->take(10)->get(),
+        ]);
     }
-
-
-
-
-
 
     public function doctorManagement()
     {
