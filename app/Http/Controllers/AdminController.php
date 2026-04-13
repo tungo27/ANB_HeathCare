@@ -35,7 +35,7 @@ class AdminController extends Controller
             // CHỈ định lấy id và các cột của doctors để không bị id của users đè lên
             ->select('doctors.*')
             // Load các mối quan hệ để hiển thị tên/email/chuyên khoa
-            ->with(['user', 'specialties'])
+            ->with(['user', 'specialty'])
             // Sắp xếp theo ngày tạo bên bảng users
             ->orderBy('users.created_at', 'desc')
             ->paginate(10);
