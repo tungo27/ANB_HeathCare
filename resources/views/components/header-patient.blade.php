@@ -1,6 +1,6 @@
-@extends('layouts.app')
+{{-- @extends('layouts.app') --}}
 
-@section('content')
+{{-- @section('content') --}}
   <aside class="w-64 bg-white border-r flex flex-col h-full">
         <div class="p-6">
             <div class="flex items-center space-x-2 mb-10">
@@ -24,18 +24,7 @@
                     Lịch sử khám
                 </a>
             </nav>
-        </div>
-        <div class="p-6 border-t mt-auto">
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="flex items-center text-gray-500 hover:text-red-600 transition w-full text-sm font-medium">
-                    Đăng xuất
-                </button>
-            </form>
-        </div>
+        
     </aside>
 
-
-
-
-@endsection
+{{-- @endsection --}}
