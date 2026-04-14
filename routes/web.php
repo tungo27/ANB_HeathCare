@@ -66,3 +66,7 @@ Route::prefix('patient')
     ->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('dashboard');
     });
+// booking 
+// Route dẫn đến trang đặt lịch, kèm theo tham số id của bác sĩ
+// Phải khớp hoàn toàn với URL bạn gọi
+Route::get('/booking/{id}', [PatientController::class, 'showBooking'])->name('patient.booking');
