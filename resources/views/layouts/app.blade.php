@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -19,15 +19,9 @@
 
 <body class="bg-light">
     <div class="min-vh-100 d-flex flex-column">
-
-        <main class="py-3 flex-grow-1">
             <div class="row justify-content-center">
-                <div class="col-12">
                     @yield('main_content')
-                </div>
             </div>
-        </main>
-
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
