@@ -5,44 +5,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    <script src="https://cdn.tailwindcss.com"></script>
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    <!-- Scripts -->
-    @vite(['public/css/app.css', 'public/js/app.js'])
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('css/sidebar.css') }}" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100">
-        @if (Auth::user()->role === 'patient')
-            @include('components.header-patient')
-        @elseif(Auth::user()->role === 'doctor')
-            @include('components.header-doctor')
-        @elseif(Auth::user()->role === 'admin')
-            @include('layouts.navigation')
-        @endif
-
-
-        @isset($header)
-            <header class="bg-white border-bottom shadow-sm py-4 mb-4">
-                <div class="container">
-                    <h1 class="h4 mb-0 text-dark fw-bold">
-                        {{ $header }}
-                    </h1>
-                </div>
-            </header>
-        @endisset
-
-        <!-- Page Content -->
-        <main>
-            @yield('content')
-        </main>
-
-
+<body class="bg-light">
+    <div class="min-vh-100 d-flex flex-column">
+            <div class="row justify-content-center">
+                    @yield('main_content')
+            </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
