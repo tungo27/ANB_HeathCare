@@ -52,10 +52,23 @@
 <div class="mb-12 text-left">
     <h3 class="text-2xl font-bold text-gray-800 mb-6">Chuyên khoa</h3>
     <div class="flex flex-wrap gap-4">
-        <button class="px-8 py-3 bg-teal-700 text-white rounded-xl font-semibold text-base shadow-lg shadow-teal-200 transition-all hover:bg-teal-800">Tất cả</button>
-        <button class="px-8 py-3 bg-white border-2 border-gray-100 text-gray-600 rounded-xl font-semibold text-base transition-all hover:border-teal-500 hover:text-teal-600">Nội khoa</button>
-        <button class="px-8 py-3 bg-white border-2 border-gray-100 text-gray-600 rounded-xl font-semibold text-base transition-all hover:border-teal-500 hover:text-teal-600">Nhi khoa</button>
-        <button class="px-8 py-3 bg-white border-2 border-gray-100 text-gray-600 rounded-xl font-semibold text-base transition-all hover:border-teal-500 hover:text-teal-600">Sản khoa</button>
+        {{-- Nút Tất cả: Trở về trang dashboard không kèm tham số lọc --}}
+        <a href="{{ route('patient.dashboard') }}#doctor-team-section" 
+           class="px-8 py-3 rounded-xl font-semibold text-base transition-all 
+                  {{ !request('specialty') ? 'bg-teal-700 text-white shadow-lg shadow-teal-200' : 'bg-white border-2 border-gray-100 text-gray-600 hover:border-teal-500 hover:text-teal-600' }}">
+            Tất cả
+        </a>
+
+        {{-- Lặp qua danh sách chuyên khoa đổ từ Controller sang --}}
+        @foreach($specialties as $item)
+            <a href="{{ route('patient.dashboard', ['specialty' => $item->id]) }}#doctor-team-section" 
+               class="px-8 py-3 rounded-xl font-semibold text-base transition-all border-2
+                      {{ request('specialty') == $item->id 
+                         ? 'bg-teal-700 text-white border-transparent shadow-lg shadow-teal-200' 
+                         : 'bg-white border-gray-100 text-gray-600 hover:border-teal-500 hover:text-teal-600' }}">
+                {{ $item->name }}
+            </a>
+        @endforeach
     </div>
 </div>
 
