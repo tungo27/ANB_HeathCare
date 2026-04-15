@@ -2,28 +2,50 @@
 
 @section('content')
 
-        <div class="flex justify-between items-center mb-10">
-    <div class="relative w-full md:w-2/3 lg:w-1/2">
+<form action="{{ route('patient.search') }}" method="GET" class="flex flex-col md:flex-row items-center gap-4 mb-10">
+    {{-- Thanh nhập liệu: Chiếm 1/2 màn hình trên máy tính để tạo sự cân đối --}}
+    <div class="relative w-full md:w-2/3 lg:w-1/2"> 
         <input type="text" 
-               class="block w-full pl-6 pr-4 py-4 border border-gray-200 rounded-2xl bg-white shadow-md focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-lg outline-none transition-all" 
-               placeholder="Tìm tên bác sĩ hoặc bệnh lý...">
-        <div class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               name="search"
+               value="{{ request('search') }}"
+               class="block w-full pl-5 pr-12 py-2.5 border border-gray-200 rounded-xl bg-white shadow-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-base outline-none transition-all" 
+               placeholder="Tìm tên bác sĩ hoặc chuyên khoa...">
+        
+        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
         </div>
     </div>
-</div>
 
-<div class="bg-white p-8 rounded-3xl shadow-md border border-gray-100 flex items-center mb-12 w-fit pr-24 transition-transform hover:scale-105">
-    <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mr-6">
+    {{-- Nút Tìm kiếm: Kích thước vừa vặn, bo góc đồng nhất --}}
+    <button type="submit" 
+            class="w-full md:w-auto px-8 py-2.5 bg-teal-700 text-white font-semibold text-sm rounded-xl shadow-sm hover:bg-teal-800 transition-all active:scale-95">
+        TÌM KIẾM
+    </button>
+</form>
+
+<div class="bg-white p-6 md:p-8 rounded-3xl shadow-md border border-gray-100 flex items-center mb-12 w-full md:w-2/3 lg:w-1/2 transition-transform hover:scale-[1.02]">
+    {{-- Icon bên trái --}}
+    <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mr-6 shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
     </div>
-    <div>
-        <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Bác sĩ trực hôm nay</p>
-        <h2 class="text-3xl font-black text-gray-800">18 <span class="text-xl font-bold">bác sĩ</span></h2>
+
+    {{-- Nội dung bên phải --}}
+    <div class="flex-1">
+        <p class="text-xs md:text-sm font-semibold text-gray-500 uppercase tracking-widest mb-1">Bác sĩ trực hôm nay</p>
+        <h2 class="text-2xl md:text-3xl font-black text-teal-700">
+            18 <span class="text-lg md:text-xl font-bold text-gray-600 ml-1">bác sĩ</span>
+        </h2>
+    </div>
+
+    {{-- Một chút trang trí bên phải (tùy chọn) để bớt trống trải --}}
+    <div class="hidden md:block text-teal-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-20" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 15h-2v-2h2v2zm0-4h-2V7h2v7z"/>
+        </svg>
     </div>
 </div>
 

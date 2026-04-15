@@ -21,19 +21,10 @@ class PatientController extends Controller
     $doctors->each(function ($doctor) {
         $doctor->full_name = $doctor->user->full_name; // Giả sử bạn có cột full_name trong bảng users
     });
-// dd(Doctor::with('Specialty')->get()->pluck('Specialty', 'full_name'));
+// dd(Doctor::with('specialty')->get()->pluck('specialty', 'full_name'));
         // Truyền biến $doctors sang view bằng hàm compact
         return view('patient.dashboard', compact('doctors'));
     }
-
-    // Ví dụ logic tạo khung giờ trong Controller
-// public function getAvailableSlots($doctorId, $date) {
-//     $morningSlots = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
-//     $afternoonSlots = ['14:00', '14:30', '15:00', '15:30', '16:00', '16:30'];
-//     $eveningSlots = ['18:00', '18:30']; // Chỉ có 2 lần khám
-
-//     return array_merge($morningSlots, $afternoonSlots, $eveningSlots);
-// }
 
 public function showBooking($id)
 {
@@ -47,5 +38,34 @@ public function showBooking($id)
     
     // Trả về file booking.blade.php mà bạn vừa đặt tên lúc nãy
     return view('patient.booking', compact('doctor', 'timeSlots'));
+}
+public function search(Request $request)
+{
+    // 1. Lấy từ khóa từ ô input 'search' mà bạn đã đặt name ở file Blade
+    $searchTerm = $request->input('search');
+
+    // 2. Khởi tạo query lấy bác sĩ cùng với thông tin User và Chuyên khoa (để tránh lỗi N+1)
+    $query = Doctor::with(['user', 'Specialty']);
+
+    // 3. Logic tìm kiếm: Nếu người dùng có nhập từ khóa
+    if ($searchTerm) {
+        $query->where(function($q) use ($searchTerm) {
+            // Tìm trong bảng users (cột name hoặc full_name)
+            $q->whereHas('user', function($userQuery) use ($searchTerm) {
+                $userQuery->where('full_name', 'LIKE', "%{$searchTerm}%")
+                          ->orWhere('full_name', 'LIKE', "%{$searchTerm}%");
+            })
+            // HOẶC tìm trong bảng specialties (cột name của chuyên khoa)
+            ->orWhereHas('Specialty', function($specQuery) use ($searchTerm) {
+                $specQuery->where('name', 'LIKE', "%{$searchTerm}%");
+            });
+        });
+    }
+
+    // 4. Lấy kết quả cuối cùng
+    $doctors = $query->get();
+
+    // 5. Trả về view (nhớ truyền biến $doctors và $searchTerm sang nhé)
+    return view('patient.search', compact('doctors', 'searchTerm'));
 }
 }
