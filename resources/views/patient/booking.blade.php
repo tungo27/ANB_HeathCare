@@ -45,8 +45,14 @@
     <textarea class="w-full p-4 border rounded-2xl" placeholder="Vui lòng mô tả chi tiết..."></textarea>
 </div>
 
-<button class="w-full py-4 bg-teal-700 text-white rounded-2xl font-bold shadow-lg">
-    XÁC NHẬN ĐẶT LỊCH
-</button>
+<div class="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-100">
+    <a href="{{ route('patient.dashboard') }}" 
+       class="px-6 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">
+        Hủy bỏ
+    </a>
+    <button type="submit" 
+            class="px-8 py-2.5 text-sm font-bold text-white bg-teal-700 rounded-xl shadow-md hover:bg-teal-800 hover:shadow-lg transition-all transform active:scale-95">
+        Xác nhận đặt lịch
+    </button>
 </div>
 @endsection

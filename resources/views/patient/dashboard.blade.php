@@ -37,16 +37,18 @@
     </div>
 </div>
 
-<div class="flex items-center justify-between mb-8">
-    <h3 class="text-2xl font-bold text-gray-800">Đội ngũ Bác sĩ</h3>
-</div>
+<div id="doctor-team-section" class="scroll-mt-[100px] min-h-screen pt-10"> 
+    
+    <h2 class="text-2xl font-bold mb-8 text-gray-800">Đội ngũ Bác sĩ</h2>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-10">
-    @foreach($doctors as $doctor)
-        <div class="transform transition duration-300 hover:-translate-y-2">
-            <x-doctor-card :doctor="$doctor" />
-        </div>
-    @endforeach
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 pb-10">
+        @foreach($doctors as $doctor)
+            <div class="transform transition duration-300 hover:-translate-y-2">
+                <x-doctor-card :doctor="$doctor" />
+            </div>
+        @endforeach
+    </div>
+
 </div>
 
 @endsection

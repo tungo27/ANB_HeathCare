@@ -27,13 +27,13 @@ class PatientController extends Controller
     }
 
     // Ví dụ logic tạo khung giờ trong Controller
-public function getAvailableSlots($doctorId, $date) {
-    $morningSlots = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
-    $afternoonSlots = ['14:00', '14:30', '15:00', '15:30', '16:00', '16:30'];
-    $eveningSlots = ['18:00', '18:30']; // Chỉ có 2 lần khám
+// public function getAvailableSlots($doctorId, $date) {
+//     $morningSlots = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00'];
+//     $afternoonSlots = ['14:00', '14:30', '15:00', '15:30', '16:00', '16:30'];
+//     $eveningSlots = ['18:00', '18:30']; // Chỉ có 2 lần khám
 
-    return array_merge($morningSlots, $afternoonSlots, $eveningSlots);
-}
+//     return array_merge($morningSlots, $afternoonSlots, $eveningSlots);
+// }
 
 public function showBooking($id)
 {
