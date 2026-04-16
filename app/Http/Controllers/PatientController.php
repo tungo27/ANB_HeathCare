@@ -112,15 +112,6 @@ public function search(Request $request)
 
 
 
-    // public function index(Request $request): View
-    // {
-    //     // Sử dụng Eloquent để lấy danh sách bác sĩ kèm thông tin chi tiết
-    //     $doctors = User::where('role', 'doctor')
-    //         ->where('is_active', true)
-    //         ->paginate(12);
-            
-    //     return view('patient.dashboard', compact('doctors'));
-    // }
 
    
 
