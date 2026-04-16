@@ -22,7 +22,7 @@
    class="{{ $navClass }} {{ $inactiveClass }} scroll-smooth">
     Danh sách bác sĩ
 </a>
-        <a href="#" class="{{ $navClass }} {{ $inactiveClass }}">Đặt lịch khám</a>
+        <a href="{{ route( Auth::user()->role . '.Appointment') }}" class="{{ $navClass }} {{ $inactiveClass }}">Đặt lịch khám</a>
         <a href="#" class="{{ $navClass }} {{ $inactiveClass }}">Lịch sử khám</a>
     </nav>
 
