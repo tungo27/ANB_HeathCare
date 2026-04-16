@@ -6,7 +6,7 @@
     <h2>Chọn chuyên khoa</h2>
     <div class="specialty-grid">
 
-         <a href="#" class="specialty-card active" data-id="1" onclick="selectSpecialty(event, this, 1)">
+        <a href="#" class="specialty-card active" data-id="1" onclick="selectSpecialty(event, this, 1)">
             <span class="specialty-icon">🫀</span>
             <span class="specialty-name">Nội khoa</span>
         </a>
@@ -54,70 +54,76 @@
 
 <script>
     const DOCTORS_URL = "{{ route(Auth::user()->role . '.appointment.doctors') }}";
+    const BOOKING_URL_TEMPLATE = "{{ route(Auth::user()->role . '.booking', ['id' => '__ID__']) }}";
+
     function selectSpecialty(event, el, specialtyId) {
-    event.preventDefault();
+        event.preventDefault();
 
-    document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+        document.querySelectorAll('.specialty-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
 
-    loadDoctors(specialtyId);
-}
-function loadDoctors(specialtyId) {
-    const section = document.getElementById('doctor-section');
-    const grid    = document.getElementById('doctor-grid');
-
-    section.style.display = 'block';
-    grid.innerHTML = Array(4).fill(0).map(() => `<div class="skeleton-card"></div>`).join('');
-
-    fetch(`${DOCTORS_URL}?specialty_id=${specialtyId}`)
-        .then(res => res.json())
-        .then(doctors => renderDoctors(doctors))
-        .catch(() => {
-            grid.innerHTML = `<div class="empty-state">Có lỗi xảy ra. Vui lòng thử lại.</div>`;
-        });
-}
-
-function renderDoctors(doctors) {
-    const grid = document.getElementById('doctor-grid');
-
-    if (doctors.length === 0) {
-        grid.innerHTML = `<div class="empty-state">Chưa có bác sĩ nào trong chuyên khoa này.</div>`;
-        return;
+        loadDoctors(specialtyId);
     }
 
-    grid.innerHTML = doctors.map(doc => {
-        const avatar = doc.avatar_url
-            ? `<img class="doctor-avatar" src="${doc.avatar_url}" alt="${doc.full_name}">`
-            : `<div class="doctor-avatar-placeholder">${doc.full_name.charAt(0)}</div>`;
+    function loadDoctors(specialtyId) {
+        const section = document.getElementById('doctor-section');
+        const grid = document.getElementById('doctor-grid');
 
-        const fee = doc.consultation_fee
-            ? Number(doc.consultation_fee).toLocaleString('vi-VN') + 'đ'
-            : 'Liên hệ';
+        section.style.display = 'block';
+        grid.innerHTML = Array(4).fill(0).map(() => `<div class="skeleton-card"></div>`).join('');
 
-        const rating = doc.avg_rating
-            ? `<span>⭐ ${doc.avg_rating} (${doc.total_ratings} đánh giá)</span>`
-            : '';
+        fetch(`${DOCTORS_URL}?specialty_id=${specialtyId}`)
+            .then(res => res.json())
+            .then(doctors => renderDoctors(doctors))
+            .catch(() => {
+                grid.innerHTML = `<div class="empty-state">Có lỗi xảy ra. Vui lòng thử lại.</div>`;
+            });
+    }
 
-        return `
+    function renderDoctors(doctors) {
+        const grid = document.getElementById('doctor-grid');
+
+        if (doctors.length === 0) {
+            grid.innerHTML = `<div class="empty-state">Chưa có bác sĩ nào trong chuyên khoa này.</div>`;
+            return;
+        }
+
+        grid.innerHTML = doctors.map(doc => {
+            const currentBookingUrl = BOOKING_URL_TEMPLATE.replace('__ID__', doc.id);
+
+            const avatar = doc.avatar_url ?
+                `<img class="doctor-avatar" src="${doc.avatar_url}" alt="${doc.full_name}">` :
+                `<div class="doctor-avatar-placeholder">${doc.full_name.charAt(0)}</div>`;
+
+            const fee = doc.consultation_fee ?
+                Number(doc.consultation_fee).toLocaleString('vi-VN') + 'đ' :
+                'Liên hệ';
+
+            const rating = doc.avg_rating ?
+                `<span>⭐ ${doc.avg_rating} (${doc.total_ratings} đánh giá)</span>` :
+                '';
+
+            return `
         <div class="doctor-card" onclick="selectDoctor(${doc.id})">
             ${avatar}
-            <div>
-                <div class="doctor-name">BS. ${doc.full_name}</div>
-                <div class="doctor-specialty">${doc.specialty_name}</div>
-                <div class="doctor-meta">
-                    <span>⏱ ${doc.years_of_experience ?? 0} năm kinh nghiệm</span>
-                    <span>💰 ${fee}</span>
-                    ${rating}
-                </div>
-            </div>
+                <a href="${currentBookingUrl}">
+                    <div>
+                        <div class="doctor-name">BS. ${doc.full_name}</div>
+                        <div class="doctor-specialty">${doc.specialty_name}</div>
+                        <div class="doctor-meta">
+                            <span> ${doc.years_of_experience ?? 0} năm kinh nghiệm</span>
+                            <span>💰 ${fee}</span>
+                        ${rating}
+                        </div>
+                    </div>
+                </a>
         </div>`;
-    }).join('');
-}
+        }).join('');
+    }
 
-function selectDoctor(doctorId) {
-    // TODO: bước tiếp theo chọn lịch khám
-    console.log('Chọn bác sĩ ID:', doctorId);
-}
+    function selectDoctor(doctorId) {
+        console.log('Chọn bác sĩ ID:', doctorId);
+    }
 </script>
 
 @endsection
