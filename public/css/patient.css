@@ -1,0 +1,119 @@
+.specialty-section {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e8edf2;
+    padding: 28px 32px 32px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+.specialty-section h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 22px;
+}
+
+.specialty-grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+}
+.specialty-grid::-webkit-scrollbar { display: none; }
+
+.specialty-card {
+    flex: 0 0 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px 16px 20px;
+    border: 1.5px solid #e8edf2;
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, transform .15s;
+    text-decoration: none;
+}
+
+.specialty-card:hover {
+    border-color: #0ea5a0;
+    box-shadow: 0 4px 16px rgba(14,165,160,.12);
+    transform: translateY(-2px);
+}
+
+.specialty-card.active {
+    border-color: #0ea5a0;
+    background: #f0fafa;
+}
+
+.specialty-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+}
+
+.specialty-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Appointment CSS */
+.doctor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+.doctor-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    border: 1.5px solid #e8edf2;
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, transform .15s;
+}
+.doctor-card:hover {
+    border-color: #0ea5a0;
+    box-shadow: 0 4px 16px rgba(14,165,160,.1);
+    transform: translateY(-2px);
+}
+.doctor-avatar {
+    width: 72px; height: 72px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.doctor-avatar-placeholder {
+    width: 72px; height: 72px;
+    border-radius: 12px;
+    background: #e0f2f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #0ea5a0;
+    flex-shrink: 0;
+}
+.doctor-name { font-size: .95rem; font-weight: 600; color: #1a202c; margin-bottom: 2px; }
+.doctor-specialty { font-size: .8rem; color: #0ea5a0; font-weight: 500; margin-bottom: 8px; }
+.doctor-meta { display: flex; flex-direction: column; gap: 4px; }
+.doctor-meta span { font-size: .8rem; color: #6b7280; }
+.skeleton-card {
+    height: 110px; border-radius: 14px;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.empty-state { text-align: center; padding: 40px; color: #9ca3af; font-size: .9rem; }

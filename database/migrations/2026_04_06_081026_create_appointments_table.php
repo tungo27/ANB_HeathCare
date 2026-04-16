@@ -23,6 +23,7 @@ return new class extends Migration
                 ->default('pending');
             $table->text('symptoms')->nullable();
             $table->text('note')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
 
             $table->unique(['doctor_id', 'appointment_date', 'appointment_time'], 'uq_doctor_datetime');
