@@ -11,11 +11,39 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['email'=>'patient1@gmail.com', 'password'=>Hash::make('123456'), 'role'=>'patient', 'full_name'=>'Nguyễn Văn A', 'phone'=>'0123456789'],
-            ['email'=>'patient2@gmail.com', 'password'=>Hash::make('123456'), 'role'=>'patient', 'full_name'=>'Trần Thị B', 'phone'=>'0987654321'],
-            ['email'=>'doctor1@gmail.com', 'password'=>Hash::make('123456'), 'role'=>'doctor', 'full_name'=>'Dr. Trần B', 'phone'=>'0912345678'],
-            ['email'=>'doctor2@gmail.com', 'password'=>Hash::make('123456'), 'role'=>'doctor', 'full_name'=>'Dr. Lê C', 'phone'=>'0981122334'],
-            ['email'=>'admin1@gmail.com', 'password'=>Hash::make('123456'), 'role'=>'admin', 'full_name'=>'Admin C', 'phone' => '0865364452'],
+            // Patients
+            [
+                'email'      => 'patient1@gmail.com',
+                'password'   => Hash::make('123456'),
+                'role'       => 'patient',
+                'full_name'  => 'Nguyễn Văn A',
+                'phone'      => '0123456789',
+                'is_active'  => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'email'      => 'patient2@gmail.com',
+                'password'   => Hash::make('123456'),
+                'role'       => 'patient',
+                'full_name'  => 'Trần Thị B',
+                'phone'      => '0987654321',
+                'is_active'  => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+
+            // Admin
+            [
+                'email'      => 'admin1@gmail.com',
+                'password'   => Hash::make('123456'),
+                'role'       => 'admin',
+                'full_name'  => 'Admin C',
+                'phone'      => '0865364452',
+                'is_active'  => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         DB::table('users')->insert($users);
