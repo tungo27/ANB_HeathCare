@@ -65,10 +65,10 @@ Route::prefix('patient')
     ->name('patient.')
     ->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('dashboard');
+        Route::get('/booking/{id}', [PatientController::class, 'showBooking'])->name('booking');
+// Route tìm kiếm bác sĩ (có thể là GET hoặc POST tùy bạn, ở đây tôi dùng GET cho đơn giản)
+Route::get('/search', [PatientController::class, 'search'])->name('search');
     });
 // booking 
 // Route dẫn đến trang đặt lịch, kèm theo tham số id của bác sĩ
 // Phải khớp hoàn toàn với URL bạn gọi
-Route::get('/booking/{id}', [PatientController::class, 'showBooking'])->name('patient.booking');
-// Route tìm kiếm bác sĩ (có thể là GET hoặc POST tùy bạn, ở đây tôi dùng GET cho đơn giản)
-Route::get('/search', [PatientController::class, 'search'])->name('patient.search');

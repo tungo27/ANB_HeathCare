@@ -2,7 +2,7 @@
 
 @section('content')
 
-<form action="{{ route('patient.search') }}" method="GET" class="flex flex-col md:flex-row items-center gap-4 mb-10">
+<form action="{{ route(Auth::user()->role . '.search') }}" method="GET" class="flex flex-col md:flex-row items-center gap-4 mb-10">
     {{-- Thanh nhập liệu: Chiếm 1/2 màn hình trên máy tính để tạo sự cân đối --}}
     <div class="relative w-full md:w-2/3 lg:w-1/2"> 
         <input type="text" 
@@ -53,7 +53,7 @@
     <h3 class="text-2xl font-bold text-gray-800 mb-6">Chuyên khoa</h3>
     <div class="flex flex-wrap gap-4">
         {{-- Nút Tất cả: Trở về trang dashboard không kèm tham số lọc --}}
-        <a href="{{ route('patient.dashboard') }}#doctor-team-section" 
+        <a href="{{ route(Auth::user()->role . '.dashboard') }}#doctor-team-section" 
            class="px-8 py-3 rounded-xl font-semibold text-base transition-all 
                   {{ !request('specialty') ? 'bg-teal-700 text-white shadow-lg shadow-teal-200' : 'bg-white border-2 border-gray-100 text-gray-600 hover:border-teal-500 hover:text-teal-600' }}">
             Tất cả
@@ -61,7 +61,7 @@
 
         {{-- Lặp qua danh sách chuyên khoa đổ từ Controller sang --}}
         @foreach($specialties as $item)
-            <a href="{{ route('patient.dashboard', ['specialty' => $item->id]) }}#doctor-team-section" 
+            <a href="{{ route(Auth::user()->role . '.dashboard', ['specialty' => $item->id]) }}#doctor-team-section" 
                class="px-8 py-3 rounded-xl font-semibold text-base transition-all border-2
                       {{ request('specialty') == $item->id 
                          ? 'bg-teal-700 text-white border-transparent shadow-lg shadow-teal-200' 
