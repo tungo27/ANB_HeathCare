@@ -71,4 +71,6 @@ Route::prefix('patient')
     ->name('patient.')
     ->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('dashboard');
+        Route::get('/Appointment', [PatientController::class, 'Appointment'])->name('Appointment');
+        Route::get('/appointment/doctors',[PatientController::class, 'getDoctor'])->name('appointment.doctors');
     });

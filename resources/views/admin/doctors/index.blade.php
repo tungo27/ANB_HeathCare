@@ -65,7 +65,7 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <span class="badge rounded-pill bg-info text-dark fw-medium px-3">
-                                        {{ $doctor->specialties->name ?? 'Chưa cập nhật' }}
+                                        {{ $doctor->specialty->name ?? 'Chưa cập nhật' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-secondary small">
