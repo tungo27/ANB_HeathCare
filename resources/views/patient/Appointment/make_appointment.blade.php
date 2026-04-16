@@ -104,9 +104,9 @@
                 '';
 
             return `
-        <div class="doctor-card" onclick="selectDoctor(${doc.id})">
-            ${avatar}
-                <a href="${currentBookingUrl}">
+            <a href="${currentBookingUrl}">
+                <div class="doctor-card" onclick="selectDoctor(${doc.id})">
+                ${avatar}
                     <div>
                         <div class="doctor-name">BS. ${doc.full_name}</div>
                         <div class="doctor-specialty">${doc.specialty_name}</div>
@@ -116,8 +116,8 @@
                         ${rating}
                         </div>
                     </div>
-                </a>
-        </div>`;
+                    </div>
+                </a>`;
         }).join('');
     }
 
