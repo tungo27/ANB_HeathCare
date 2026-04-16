@@ -70,14 +70,14 @@ class GenerateDailySchedules extends Command
             $strEndTime = $slotEnd->format('H:i:s');
 
             // Kiểm tra xem giờ này đã tồn tại chưa (chống trùng lặp nếu lỡ chạy lệnh 2 lần)
-            $exists = Schedule::where('user_id', $userId)
+            $exists = Schedule::where('doctor_id', $userId)
                 ->where('work_date', $workDate)
                 ->where('start_time', $strStartTime)
                 ->exists();
 
             if (!$exists) {
                 Schedule::create([
-                    'user_id' => $userId,
+                    'doctor_id' => $userId,
                     'room' => $room,
                     'work_date' => $workDate,
                     'start_time' => $strStartTime,

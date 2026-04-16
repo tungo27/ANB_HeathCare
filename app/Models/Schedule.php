@@ -11,7 +11,7 @@ class Schedule extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'doctor_id',
         'room',
         'work_date',
         'start_time',
@@ -30,7 +30,7 @@ class Schedule extends Model
      */
     public function doctor()
     {
-        return $this->belongsTo(Doctor::class, 'user_id', 'user_id');
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'user_id');
     }
 
     // Thêm dòng này để báo Laravel đừng tự thêm created_at/updated_at vào câu lệnh SQL
@@ -38,6 +38,6 @@ class Schedule extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'doctor_id', 'id');
     }
 }

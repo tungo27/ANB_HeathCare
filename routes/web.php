@@ -50,6 +50,12 @@ Route::prefix('admin')
             Route::put('/{doctor}', [AdminController::class, 'doctorUpdate'])->name('doctorUpdate');
             Route::delete('/{doctor}', [AdminController::class, 'doctorDestroy'])->name('doctorDestroy');
         });
+
+        // Quản lý Lịch làm việc (Schedules)
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/create', [AdminController::class, 'scheduleCreate'])->name('create');
+            Route::post('/store', [AdminController::class, 'scheduleStore'])->name('store');
+        });
     });
 
 // 5. NHÓM DOCTOR
@@ -71,6 +77,4 @@ Route::prefix('patient')
     ->name('patient.')
     ->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('dashboard');
-        Route::get('/Appointment', [PatientController::class, 'Appointment'])->name('Appointment');
-        Route::get('/appointment/doctors',[PatientController::class, 'getDoctor'])->name('appointment.doctors');
     });

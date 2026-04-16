@@ -18,7 +18,7 @@ class DoctorController extends Controller
     public function index(Request $request)
     {
         // 1. Khởi tạo query lấy lịch của bác sĩ đang đăng nhập
-        $query = Schedule::where('user_id', Auth::id());
+        $query = Schedule::where('doctor_id', Auth::id());
 
         // 2. Kiểm tra tham số 'status' trên URL để lọc dữ liệu
         // status=available hoặc ?status=booked
