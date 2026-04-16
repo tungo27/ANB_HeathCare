@@ -18,7 +18,10 @@
            class="{{ $navClass }} {{ request()->routeIs('*.dashboard') ? $activeClass : $inactiveClass }}">
             Trang chủ
         </a>
-        <a href="#" class="{{ $navClass }} {{ $inactiveClass }}">Danh sách bác sĩ</a>
+        <a href="#doctor-team-section" 
+   class="{{ $navClass }} {{ $inactiveClass }} scroll-smooth">
+    Danh sách bác sĩ
+</a>
         <a href="{{ route( Auth::user()->role . '.Appointment') }}" class="{{ $navClass }} {{ $inactiveClass }}">Đặt lịch khám</a>
         <a href="#" class="{{ $navClass }} {{ $inactiveClass }}">Lịch sử khám</a>
     </nav>
