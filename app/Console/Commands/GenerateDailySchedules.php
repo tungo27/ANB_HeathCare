@@ -83,8 +83,8 @@ class GenerateDailySchedules extends Command
                     'start_time' => $strStartTime,
                     'end_time' => $strEndTime,
                     'slot_duration' => $slotDuration,
-                    'max_patients' => 1,
-                    'is_available' => 1,
+                    'max_patients' => 10,
+                    'status' => 1,
                 ]);
             }
 

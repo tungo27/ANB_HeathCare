@@ -9,4 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Tự động sinh lịch cho 7 ngày tới vào lúc 0h00 hàng ngày
-Schedule::command('schedules:generate --days=7')->dailyAt('00:00');
+Schedule::command('schedules:generate --days=1')->dailyAt('00:00');

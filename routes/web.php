@@ -60,6 +60,9 @@ Route::middleware(['auth', 'role:doctor'])
 
         // Dashboard
         Route::get('/', [DoctorController::class, 'index'])->name('dashboard');
+
+        // Xem lịch hẹn khám
+        Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
     });
 
 // 6. NHÓM PATIENT

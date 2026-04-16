@@ -2,88 +2,85 @@
 
 @section('title', 'Chỉnh sửa Bác sĩ')
 
-{{-- Loại bỏ việc đẩy file CSS cũ nếu bạn đã chuyển sang Tailwind hoàn toàn --}}
-
 @section('content')
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-5 bg-light min-vh-100">
+        <div class="container" style="max-width: 900px;">
             {{-- Card Container --}}
-            <div class="bg-white overflow-hidden shadow-md rounded-lg border border-gray-200">
+            <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
 
                 {{-- Form Header --}}
-                <div class="px-6 py-4 bg-teal-600 border-b border-teal-700">
-                    <h3 class="text-lg font-bold text-white">
-                        Chỉnh sửa Bác sĩ: <span class="font-normal">{{ $doctor->user->full_name }}</span>
+                <div class="card-header py-3" style="background-color: #0d9488; border-bottom: 1px solid #0f766e;">
+                    <h3 class="h5 mb-0 fw-bold text-white">
+                        Chỉnh sửa Bác sĩ: <span class="fw-normal">{{ $doctor->user->full_name }}</span>
                     </h3>
                 </div>
 
-                <div class="p-8">
+                <div class="card-body p-4 p-md-5">
                     {{-- Alert Messages --}}
                     @if (session('error'))
-                        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded shadow-sm">
+                        <div class="alert alert-danger border-0 border-start border-4 border-danger shadow-sm mb-4">
                             {{ session('error') }}
                         </div>
                     @endif
 
                     @if ($errors->any())
-                        <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded shadow-sm">
-                            <ul class="list-disc list-inside text-sm">
+                        <div class="alert alert-danger border-0 border-start border-4 border-danger shadow-sm mb-4">
+                            <ul class="list-unstyled mb-0 small">
                                 @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                    <li><i class="bi bi-exclamation-circle me-2"></i>{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     {{-- Update Form --}}
-                    <form action="{{ route('admin.doctors.doctorUpdate', $doctor) }}" method="POST" class="space-y-6">
+                    <form action="{{ route('admin.doctors.doctorUpdate', $doctor) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="row g-4">
                             {{-- Họ và Tên --}}
-                            <div class="col-span-1">
-                                <label for="full_name" class="block text-sm font-medium text-gray-700 mb-1">Họ và
-                                    Tên</label>
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label fw-semibold text-secondary small">Họ và Tên</label>
                                 <input type="text" name="full_name" id="full_name"
                                     value="{{ old('full_name', $doctor->user->full_name) }}" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                    class="form-control @error('full_name') is-invalid @enderror shadow-none py-2">
                                 @error('full_name')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Số điện thoại --}}
-                            <div class="col-span-1">
-                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Số điện
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-semibold text-secondary small">Số điện
                                     thoại</label>
                                 <input type="text" name="phone" id="phone"
                                     value="{{ old('phone', $doctor->user->phone ?? '') }}" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition"
+                                    class="form-control @error('phone') is-invalid @enderror shadow-none py-2"
                                     placeholder="Nhập số điện thoại...">
                                 @error('phone')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Email --}}
-                            <div class="col-span-2">
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email (Dùng để
+                            <div class="col-12">
+                                <label for="email" class="form-label fw-semibold text-secondary small">Email (Dùng để
                                     đăng nhập)</label>
                                 <input type="email" name="email" id="email"
                                     value="{{ old('email', $doctor->user->email) }}" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                    class="form-control @error('email') is-invalid @enderror shadow-none py-2">
                                 @error('email')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Chuyên khoa --}}
-                            <div class="col-span-1">
-                                <label for="specialty_id" class="block text-sm font-medium text-gray-700 mb-1">Chuyên
+                            <div class="col-md-6">
+                                <label for="specialty_id" class="form-label fw-semibold text-secondary small">Chuyên
                                     khoa</label>
                                 <select name="specialty_id" id="specialty_id" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                    class="form-select @error('specialty_id') is-invalid @enderror shadow-none py-2">
                                     <option value="">-- Chọn chuyên khoa --</option>
                                     @foreach ($specialties as $specialty)
                                         <option value="{{ $specialty->id }}"
@@ -93,68 +90,71 @@
                                     @endforeach
                                 </select>
                                 @error('specialty_id')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Trình độ --}}
-                            <div class="col-span-1">
-                                <label for="qualification" class="block text-sm font-medium text-gray-700 mb-1">Trình độ
+                            <div class="col-md-6">
+                                <label for="qualification" class="form-label fw-semibold text-secondary small">Trình độ
                                     chuyên môn</label>
                                 <input type="text" name="qualification" id="qualification"
                                     value="{{ old('qualification', $doctor->qualification) }}" required
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                    class="form-control @error('qualification') is-invalid @enderror shadow-none py-2">
                                 @error('qualification')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Kinh nghiệm --}}
-                            <div class="col-span-1">
-                                <label for="years_of_experience" class="block text-sm font-medium text-gray-700 mb-1">Số năm
+                            <div class="col-md-6">
+                                <label for="years_of_experience" class="form-label fw-semibold text-secondary small">Số năm
                                     kinh nghiệm</label>
                                 <input type="number" name="years_of_experience" id="years_of_experience"
                                     value="{{ old('years_of_experience', $doctor->years_of_experience) }}" required
                                     min="0"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                    class="form-control @error('years_of_experience') is-invalid @enderror shadow-none py-2">
                                 @error('years_of_experience')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Phí khám --}}
-                            <div class="col-span-1">
-                                <label for="consultation_fee" class="block text-sm font-medium text-gray-700 mb-1">Phí khám
+                            <div class="col-md-6">
+                                <label for="consultation_fee" class="form-label fw-semibold text-secondary small">Phí khám
                                     (VNĐ)</label>
-                                <input type="number" name="consultation_fee" id="consultation_fee"
-                                    value="{{ old('consultation_fee', $doctor->consultation_fee) }}" required
-                                    min="0"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted small">₫</span>
+                                    <input type="number" name="consultation_fee" id="consultation_fee"
+                                        value="{{ old('consultation_fee', $doctor->consultation_fee) }}" required
+                                        min="0"
+                                        class="form-control border-start-0 @error('consultation_fee') is-invalid @enderror shadow-none py-2">
+                                </div>
                                 @error('consultation_fee')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             {{-- Tiểu sử --}}
-                            <div class="col-span-2">
-                                <label for="bio" class="block text-sm font-medium text-gray-700 mb-1">Tiểu sử / Giới
+                            <div class="col-12">
+                                <label for="bio" class="form-label fw-semibold text-secondary small">Tiểu sử / Giới
                                     thiệu</label>
                                 <textarea name="bio" id="bio" rows="4"
-                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring focus:ring-teal-200 focus:ring-opacity-50 transition">{{ old('bio', $doctor->bio) }}</textarea>
+                                    class="form-control @error('bio') is-invalid @enderror shadow-none">{{ old('bio', $doctor->bio) }}</textarea>
                                 @error('bio')
-                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
 
                         {{-- Form Actions --}}
-                        <div class="flex items-center justify-end space-x-4 pt-6 border-t border-gray-100">
+                        <div class="d-flex align-items-center justify-content-end gap-3 pt-4 mt-5 border-top">
                             <a href="{{ route('admin.doctors.doctorManagement') }}"
-                                class="px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-300 focus:ring focus:ring-blue-200 active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150">
+                                class="btn btn-outline-secondary px-4 fw-semibold text-uppercase small shadow-sm">
                                 Hủy
                             </a>
-                            <button type="submit"
-                                class="px-4 py-2 bg-teal-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-teal-700 active:bg-teal-900 focus:outline-none focus:border-teal-900 focus:ring focus:ring-teal-300 disabled:opacity-25 transition ease-in-out duration-150 shadow-md">
+                            <button type="submit" class="btn text-white px-4 fw-bold text-uppercase small shadow-sm"
+                                style="background-color: #0d9488;">
                                 Cập nhật Bác sĩ
                             </button>
                         </div>
