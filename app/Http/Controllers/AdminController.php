@@ -6,8 +6,10 @@ use App\Models\Doctor;
 use App\Models\User;
 use App\Models\Specialties;
 use App\Models\Appointment;
+use App\Models\Schedule;
 use App\Http\Requests\StoreDoctorRequest;
 use App\Http\Requests\UpdateDoctorRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -49,7 +51,8 @@ class AdminController extends Controller
         return view('admin.doctors.create', compact('specialties'));
     }
 
-    public function doctorStore(StoreDoctorRequest $request)
+    // Tạm thời đổi StoreDoctorRequest thành Request để xem có phải lỗi do Validate ẩn không
+    public function doctorStore(Request $request)
     {
         try {
             DB::beginTransaction();
@@ -59,7 +62,7 @@ class AdminController extends Controller
                 'full_name' => $request->full_name,
                 'email'     => $request->email,
                 'phone'     => $request->phone,
-                'password'  => Hash::make('password123'),
+                'password'  => Hash::make('minhtu111'),
                 'role'      => 'doctor',
             ]);
 
@@ -82,8 +85,10 @@ class AdminController extends Controller
             DB::rollBack();
             Log::error('Lỗi khi tạo Bác sĩ: ' . $e->getMessage());
 
-            // Trả về kèm thông báo lỗi cụ thể để debug
-            return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
+            // TẠM THỜI IN THẲNG LỖI RA MÀN HÌNH TRÌNH DUYỆT ĐỂ KIỂM TRA:
+            dd('Lỗi Database khi lưu:', $e->getMessage(), 'Dữ liệu gửi lên:', $request->all());
+
+            // return back()->withInput()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
 
@@ -133,5 +138,89 @@ class AdminController extends Controller
         $doctor->delete();
 
         return redirect()->route('admin.doctors.doctorManagement')->with('success', 'Đã xóa hồ sơ Bác sĩ thành công.');
+    }
+
+    public function scheduleCreate()
+    {
+        // Lấy danh sách bác sĩ để hiển thị trên Dropdown
+        $doctors = Doctor::with('user')->get();
+        return view('admin.schedules.create', compact('doctors'));
+    }
+
+    public function scheduleStore(Request $request)
+    {
+        $request->validate([
+            'doctor_id'     => 'required',
+            'room'          => 'required|string|max:255',
+            'work_date'     => 'required|date|after_or_equal:today',
+            'shifts'        => 'required|array|min:1',
+            'slot_duration' => 'required|integer|min:10',
+        ]);
+
+        $userId = $request->doctor_id;
+        $workDate = $request->work_date;
+        $room = $request->room;
+        $slotDuration = (int) $request->slot_duration;
+        $shifts = $request->shifts;
+
+        try {
+            DB::beginTransaction();
+
+            // Tái sử dụng logic chẻ nhỏ ca theo khung giờ
+            if (in_array('morning', $shifts)) {
+                $this->generateSlotsForPeriod($userId, $workDate, '08:00', '12:00', $slotDuration, $room);
+            }
+
+            if (in_array('afternoon', $shifts)) {
+                $this->generateSlotsForPeriod($userId, $workDate, '13:30', '17:00', $slotDuration, $room);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Lịch làm việc đã được tạo thành công.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Lỗi khi tạo lịch làm việc: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Có lỗi xảy ra khi tạo lịch: ' . $e->getMessage());
+        }
+    }
+
+    // Hàm chẻ thời gian được chuyển từ GenerateDailySchedules Command sang
+    private function generateSlotsForPeriod($userId, $workDate, $startTime, $endTime, $slotDuration, $room)
+    {
+        $current = Carbon::parse("$workDate $startTime");
+        $end = Carbon::parse("$workDate $endTime");
+
+        while ($current < $end) {
+            $slotStart = $current->copy();
+            $slotEnd = $current->copy()->addMinutes($slotDuration);
+
+            if ($slotEnd > $end) {
+                break;
+            }
+
+            $strStartTime = $slotStart->format('H:i:s');
+            $strEndTime = $slotEnd->format('H:i:s');
+
+            // Kiểm tra xem giờ này đã tồn tại chưa (chống trùng lặp nếu lỡ ấn tạo 2 lần)
+            $exists = Schedule::where('doctor_id', $userId)
+                ->where('work_date', $workDate)
+                ->where('start_time', $strStartTime)
+                ->exists();
+
+            if (!$exists) {
+                Schedule::create([
+                    'doctor_id'     => $userId,
+                    'room'          => $room,
+                    'work_date'     => $workDate,
+                    'start_time'    => $strStartTime,
+                    'end_time'      => $strEndTime,
+                    'slot_duration' => $slotDuration,
+                    'max_patients'  => 10,
+                    'status'        => 1,
+                ]);
+            }
+
+            $current->addMinutes($slotDuration);
+        }
     }
 }

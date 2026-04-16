@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="{{ asset('css/patient.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctor.css')}}">
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['public/css/app.css', 'public/js/app.js'])
 </head>
 
 <body class="bg-light">

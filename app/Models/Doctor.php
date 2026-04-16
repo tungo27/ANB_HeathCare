@@ -9,6 +9,7 @@ class Doctor extends Model
 {
     protected $table = 'doctors';
     protected $primaryKey = 'user_id';
+    public $incrementing = false;
     public $timestamps = false;
 
     protected $fillable = ['user_id', 'specialty_id', 'qualification', 'years_of_experience', 'consultation_fee', 'bio'];
@@ -22,5 +23,9 @@ class Doctor extends Model
     public function Specialty(): BelongsTo
     {
         return $this->belongsTo(Specialties::class, 'specialty_id');
+    }
+    public function schedules()
+    {
+        return $this->hasMany(Schedule::class, 'user_id', 'user_id');
     }
 }

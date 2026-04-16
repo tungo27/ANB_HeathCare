@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\SpecialytiesController;
 
@@ -49,14 +50,25 @@ Route::prefix('admin')
             Route::put('/{doctor}', [AdminController::class, 'doctorUpdate'])->name('doctorUpdate');
             Route::delete('/{doctor}', [AdminController::class, 'doctorDestroy'])->name('doctorDestroy');
         });
+
+        // Quản lý Lịch làm việc (Schedules)
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/create', [AdminController::class, 'scheduleCreate'])->name('create');
+            Route::post('/store', [AdminController::class, 'scheduleStore'])->name('store');
+        });
     });
 
 // 5. NHÓM DOCTOR
-Route::prefix('doctor')
-    ->middleware(['auth', 'role:doctor'])
+Route::middleware(['auth', 'role:doctor'])
+    ->prefix('doctor')
     ->name('doctor.')
     ->group(function () {
-        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+        // Dashboard
+        Route::get('/', [DoctorController::class, 'index'])->name('dashboard');
+
+        // Xem lịch hẹn khám
+        Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
     });
 
 // 6. NHÓM PATIENT
@@ -66,10 +78,10 @@ Route::prefix('patient')
     ->group(function () {
         Route::get('/', [PatientController::class, 'index'])->name('dashboard');
         Route::get('/booking/{id}', [PatientController::class, 'showBooking'])->name('booking');
-// Route tìm kiếm bác sĩ (có thể là GET hoặc POST tùy bạn, ở đây tôi dùng GET cho đơn giản)
+        // Route tìm kiếm bác sĩ (có thể là GET hoặc POST tùy bạn, ở đây tôi dùng GET cho đơn giản)
         Route::get('/search', [PatientController::class, 'search'])->name('search');
         Route::get('/Appointment', [PatientController::class, 'Appointment'])->name('Appointment');
-        Route::get('/appointment/doctors',[PatientController::class, 'getDoctor'])->name('appointment.doctors');
+        Route::get('/appointment/doctors', [PatientController::class, 'getDoctor'])->name('appointment.doctors');
     });
 // booking 
 // Route dẫn đến trang đặt lịch, kèm theo tham số id của bác sĩ
