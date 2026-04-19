@@ -18,12 +18,8 @@ return new class extends Migration
             $table->date('work_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->integer('slot_duration')->default(30);
-            $table->integer('max_patients')->default(10);
-            $table->boolean('is_available')->default(true);
-
-            $table->unique(['doctor_id', 'work_date', 'start_time'], 'uq_doctor_slot');
-            $table->unique(['room', 'work_date', 'start_time'], 'uq_room_slot');
+            $table->integer('is_available')->default(1); // 1: Free, 2: Booked, 3: Canceled/Expired
+            $table->timestamps();
 
             $table->foreign('doctor_id')
                 ->references('user_id')->on('doctors')

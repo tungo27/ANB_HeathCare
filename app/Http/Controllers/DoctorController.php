@@ -3,59 +3,66 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShiftAssignment;
 use App\Models\Schedule;
 use App\Models\Appointment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
 
 class DoctorController extends Controller
 {
-    // app/Http/Controllers/DoctorController.php
-
-    public function index(Request $request)
+    public function dashboard()
     {
-        // 1. Khởi tạo query lấy lịch của bác sĩ đang đăng nhập
-        $query = Schedule::where('doctor_id', Auth::id());
+        $doctor = Auth::user()->doctor;
+        $assignments = $doctor->shiftAssignments()->with('shift')->where('status', 'pending')->get();
+        $appointments = Appointment::where('doctor_id', $doctor->user_id)
+            ->with(['patient', 'schedule'])
+            ->get();
 
-        // 2. Kiểm tra tham số 'status' trên URL để lọc dữ liệu
-        // status=available hoặc ?status=booked
-        if ($request->has('status')) {
-            if ($request->status === 'available') {
-                $query->where('status', 1);
-            } elseif ($request->status === 'booked') {
-                $query->where('status', 2);
-            }
-        }
-
-        // 3. Sắp xếp và phân trang
-        // Quan trọng: Thêm withQueryString() để giữ bộ lọc khi người dùng bấm sang trang 2, 3...
-        $schedules = $query->orderBy('work_date', 'desc')
-            ->orderBy('start_time', 'asc')
-            ->paginate(10)
-            ->withQueryString();
-
-        // 4. Trả về view
-        return view('doctor.dashboard', compact('schedules'));
+        return view('doctor.dashboard', compact('assignments', 'appointments'));
     }
 
-    public function appointments(Request $request): View
+    public function acceptShift($id)
     {
-        // Lấy danh sách lịch hẹn của bác sĩ đang đăng nhập
-        // Giả sử bảng appointments có trường doctor_id liên kết với id của User(bác sĩ)
-        $query = Appointment::where('doctor_id', Auth::id());
+        $assignment = ShiftAssignment::findOrFail($id);
+        
+        DB::transaction(function () use ($assignment) {
+            $assignment->update(['status' => 'accepted']);
+            
+            $shift = $assignment->shift;
+            $start = Carbon::parse($assignment->work_date . ' ' . $shift->start_time);
+            $end = Carbon::parse($assignment->work_date . ' ' . $shift->end_time);
+            
+            while ($start->copy()->addMinutes(30)->lte($end)) {
+                Schedule::create([
+                    'doctor_id' => $assignment->doctor_id,
+                    'work_date' => $assignment->work_date,
+                    'start_time' => $start->format('H:i:s'),
+                    'end_time' => $start->copy()->addMinutes(30)->format('H:i:s'),
+                    'is_available' => 1, // Free
+                ]);
+                $start->addMinutes(30);
+            }
+        });
 
-        // Lọc theo trạng thái nếu có
-        if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
-        }
+        return back()->with('success', 'Shift accepted and slots generated.');
+    }
 
-        // Sắp xếp lịch hẹn mới nhất lên đầu và phân trang
-        $appointments = $query->orderBy('appointment_date', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+    public function rejectShift($id)
+    {
+        $assignment = ShiftAssignment::findOrFail($id);
+        $assignment->update(['status' => 'rejected']);
+        return back()->with('info', 'Shift rejected.');
+    }
+
+    public function appointments()
+    {
+        $appointments = Appointment::where('doctor_id', Auth::id())
+            ->with(['patient', 'schedule'])
+            ->orderBy('id', 'desc')
+            ->paginate(10);
 
         return view('doctor.appointments', compact('appointments'));
     }

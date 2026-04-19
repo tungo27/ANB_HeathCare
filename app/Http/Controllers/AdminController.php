@@ -23,7 +23,7 @@ class AdminController extends Controller
     {
         return view('admin.dashboard', [
             'totalDoctors'        => Doctor::count(),
-            'todayPatients'       => Appointment::whereDate('appointment_date', today())->distinct('patient_id')->count(),
+            // 'todayPatients'       => Appointment::whereDate('appointment_date', today())->distinct('patient_id')->count(),
             'pendingAppointments' => Appointment::where('status', 'pending')->count(),
             'recentDoctors'       => Doctor::with(['user', 'specialty'])->latest('user_id')->take(10)->get(),
         ]);
