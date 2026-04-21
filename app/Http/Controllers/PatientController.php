@@ -6,6 +6,7 @@ use App\Models\Doctor;
 use App\Models\Schedule;
 use App\Models\Appointment;
 use App\Models\Specialties;
+use App\Models\ScheduleSlot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -88,4 +89,39 @@ class PatientController extends Controller
         $doctors = $query->get();
         return view('patient.search', compact('doctors', 'searchTerm'));
     }
+
+
+    // bệnh nhân đặt lịch với schedule slots
+    public function store(Request $request)
+{
+    $request->validate([
+        'schedule_slot_id' => 'required|exists:schedule_slots,id',
+        'symptoms' => 'nullable|string|max:500',
+    ]);
+    
+    $slot = ScheduleSlot::with('schedule')->findOrFail($request->schedule_slot_id);
+    
+    // ✅ Kiểm tra slot còn trống (double-check để tránh race condition)
+    if ($slot->status !== 'available') {
+        return back()->withErrors(['slot' => 'Suất khám này vừa được đặt. Vui lòng chọn suất khác.']);
+    }
+    
+    // ✅ Tạo appointment
+    $appointment = Appointment::create([
+        'patient_id' => Auth::id(),
+        'schedule_id' => $slot->schedule_id,
+        'status' => 'confirmed',
+        'symptoms' => $request->symptoms,
+    ]);
+    
+    // ✅ Book slot (atomic operation)
+    if (!$slot->book($appointment)) {
+        $appointment->delete(); // Rollback nếu book fail
+        return back()->withErrors(['slot' => 'Đặt lịch thất bại. Vui lòng thử lại.']);
+    }
+    
+    return redirect()->route('patient.appointments.index')
+        ->with('success', 'Đặt lịch thành công!');
+}
+
 }
