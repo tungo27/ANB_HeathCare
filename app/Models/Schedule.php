@@ -31,6 +31,18 @@ class Schedule extends Model
         return $this->belongsTo(Doctor::class, 'doctor_id', 'user_id');
     }
 
+    // ✅ Quan hệ mới: Một ca có nhiều slot
+    public function slots()
+    {
+        return $this->hasMany(ScheduleSlot::class)->orderBy('slot_number');
+    }
+
+    // ✅ Helper: Lấy slot còn trống
+    public function getAvailableSlotsAttribute()
+    {
+        return $this->slots()->where('status', 'available')->get();
+    }
+
     // Thêm dòng này để báo Laravel đừng tự thêm created_at/updated_at vào câu lệnh SQL
     public $timestamps = false;
 

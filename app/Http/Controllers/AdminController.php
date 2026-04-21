@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Specialties;
 use App\Models\Appointment;
 use App\Models\Schedule;
+use App\Models\ScheduleSlot;
 use App\Http\Requests\StoreDoctorRequest;
 use App\Http\Requests\UpdateDoctorRequest;
 use Illuminate\Support\Carbon;
@@ -147,80 +148,117 @@ class AdminController extends Controller
         return view('admin.schedules.create', compact('doctors'));
     }
 
-    public function scheduleStore(Request $request)
+    // public function scheduleStore(Request $request)
+    // {
+    //     $request->validate([
+    //         'doctor_id'     => 'required',
+    //         'room'          => 'required|string|max:255',
+    //         'work_date'     => 'required|date|after_or_equal:today',
+    //         'shifts'        => 'required|array|min:1',
+    //         'slot_duration' => 'required|integer|min:10',
+    //     ]);
+
+    //     $userId = $request->doctor_id;
+    //     $workDate = $request->work_date;
+    //     $room = $request->room;
+    //     $slotDuration = (int) $request->slot_duration;
+    //     $shifts = $request->shifts;
+
+    //     try {
+    //         DB::beginTransaction();
+
+    //         // Tái sử dụng logic chẻ nhỏ ca theo khung giờ
+    //         if (in_array('morning', $shifts)) {
+    //             $this->generateSlotsForPeriod($userId, $workDate, '08:00', '12:00', $slotDuration, $room);
+    //         }
+
+    //         if (in_array('afternoon', $shifts)) {
+    //             $this->generateSlotsForPeriod($userId, $workDate, '13:30', '17:00', $slotDuration, $room);
+    //         }
+
+    //         DB::commit();
+    //         return redirect()->back()->with('success', 'Lịch làm việc đã được tạo thành công.');
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Lỗi khi tạo lịch làm việc: ' . $e->getMessage());
+    //         return back()->withInput()->with('error', 'Có lỗi xảy ra khi tạo lịch: ' . $e->getMessage());
+    //     }
+    // }
+
+    // // Hàm chẻ thời gian được chuyển từ GenerateDailySchedules Command sang
+    // // private function generateSlotsForPeriod($userId, $workDate, $startTime, $endTime, $slotDuration, $room)
+    // // {
+    // //     $current = Carbon::parse("$workDate $startTime");
+    // //     $end = Carbon::parse("$workDate $endTime");
+
+    // //     while ($current < $end) {
+    // //         $slotStart = $current->copy();
+    // //         $slotEnd = $current->copy()->addMinutes($slotDuration);
+
+    // //         if ($slotEnd > $end) {
+    // //             break;
+    // //         }
+
+    // //         $strStartTime = $slotStart->format('H:i:s');
+    // //         $strEndTime = $slotEnd->format('H:i:s');
+
+    // //         // Kiểm tra xem giờ này đã tồn tại chưa (chống trùng lặp nếu lỡ ấn tạo 2 lần)
+    // //         $exists = Schedule::where('doctor_id', $userId)
+    // //             ->where('work_date', $workDate)
+    // //             ->where('start_time', $strStartTime)
+    // //             ->exists();
+
+    // //         if (!$exists) {
+    // //             Schedule::create([
+    // //                 'doctor_id'     => $userId,
+    // //                 'room'          => $room,
+    // //                 'work_date'     => $workDate,
+    // //                 'start_time'    => $strStartTime,
+    // //                 'end_time'      => $strEndTime,
+    // //                 'slot_duration' => $slotDuration,
+    // //                 'max_patients'  => 10,
+    // //                 'status'        => 1,
+    // //             ]);
+    // //         }
+
+    // //         $current->addMinutes($slotDuration);
+    // //     }
+    // // }
+
+
+    // phần Schedule Slot mới
+    public function generateSlots(Schedule $schedule)
     {
-        $request->validate([
-            'doctor_id'     => 'required',
-            'room'          => 'required|string|max:255',
-            'work_date'     => 'required|date|after_or_equal:today',
-            'shifts'        => 'required|array|min:1',
-            'slot_duration' => 'required|integer|min:10',
-        ]);
+        $slots = [];
+        $currentTime = Carbon::parse("{$schedule->work_date} {$schedule->start_time}");
+        $endTime = Carbon::parse("{$schedule->work_date} {$schedule->end_time}");
+        $slotNumber = 1;
 
-        $userId = $request->doctor_id;
-        $workDate = $request->work_date;
-        $room = $request->room;
-        $slotDuration = (int) $request->slot_duration;
-        $shifts = $request->shifts;
+        while ($currentTime->copy()->addMinutes(30)->lte($endTime)) {
+            $slotEnd = $currentTime->copy()->addMinutes(30);
 
-        try {
-            DB::beginTransaction();
-
-            // Tái sử dụng logic chẻ nhỏ ca theo khung giờ
-            if (in_array('morning', $shifts)) {
-                $this->generateSlotsForPeriod($userId, $workDate, '08:00', '12:00', $slotDuration, $room);
+            // Skip blocked times
+            if (!$this->isTimeBlocked($schedule, $currentTime, $slotEnd)) {
+                $slots[] = [
+                    'schedule_id' => $schedule->id,
+                    'slot_number' => $slotNumber,
+                    'slot_start_time' => $currentTime->format('H:i:s'),
+                    'slot_end_time' => $slotEnd->format('H:i:s'),
+                    'status' => 'available',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                $slotNumber++;
             }
 
-            if (in_array('afternoon', $shifts)) {
-                $this->generateSlotsForPeriod($userId, $workDate, '13:30', '17:00', $slotDuration, $room);
-            }
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Lịch làm việc đã được tạo thành công.');
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Lỗi khi tạo lịch làm việc: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Có lỗi xảy ra khi tạo lịch: ' . $e->getMessage());
+            $currentTime = $slotEnd->addMinutes(5); // + break time
         }
+
+        ScheduleSlot::insert($slots);
     }
-
-    // Hàm chẻ thời gian được chuyển từ GenerateDailySchedules Command sang
-    private function generateSlotsForPeriod($userId, $workDate, $startTime, $endTime, $slotDuration, $room)
+    private function isTimeBlocked(Schedule $schedule, Carbon $start, Carbon $end): bool
     {
-        $current = Carbon::parse("$workDate $startTime");
-        $end = Carbon::parse("$workDate $endTime");
-
-        while ($current < $end) {
-            $slotStart = $current->copy();
-            $slotEnd = $current->copy()->addMinutes($slotDuration);
-
-            if ($slotEnd > $end) {
-                break;
-            }
-
-            $strStartTime = $slotStart->format('H:i:s');
-            $strEndTime = $slotEnd->format('H:i:s');
-
-            // Kiểm tra xem giờ này đã tồn tại chưa (chống trùng lặp nếu lỡ ấn tạo 2 lần)
-            $exists = Schedule::where('doctor_id', $userId)
-                ->where('work_date', $workDate)
-                ->where('start_time', $strStartTime)
-                ->exists();
-
-            if (!$exists) {
-                Schedule::create([
-                    'doctor_id'     => $userId,
-                    'room'          => $room,
-                    'work_date'     => $workDate,
-                    'start_time'    => $strStartTime,
-                    'end_time'      => $strEndTime,
-                    'slot_duration' => $slotDuration,
-                    'max_patients'  => 10,
-                    'status'        => 1,
-                ]);
-            }
-
-            $current->addMinutes($slotDuration);
-        }
+        // Logic check if doctor has blocked this specific time range
+        return false;
     }
 }

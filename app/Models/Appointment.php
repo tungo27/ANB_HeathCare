@@ -28,4 +28,10 @@ class Appointment extends Model
     {
         return $this->belongsTo(Schedule::class);
     }
+
+    // ✅ Thêm quan hệ tới slot cụ thể
+    public function slot()
+    {
+        return $this->hasOne(ScheduleSlot::class);
+    }
 }
