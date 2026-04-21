@@ -17,8 +17,10 @@ class DoctorController extends Controller
     {
         $doctor = Auth::user()->doctor;
         $assignments = $doctor->shiftAssignments()->with('shift')->where('status', 'pending')->get();
-        $appointments = Appointment::where('doctor_id', $doctor->user_id)
-            ->with(['patient', 'schedule'])
+        $appointments = Appointment::whereHas('schedule', function ($query) use ($doctor) {
+            $query->where('doctor_id', $doctor->user_id);
+        })
+            ->with(['patient', 'schedule.doctor']) // ✅ Load thêm doctor từ schedule nếu cần
             ->get();
 
         return view('doctor.dashboard', compact('assignments', 'appointments'));
@@ -27,14 +29,14 @@ class DoctorController extends Controller
     public function acceptShift($id)
     {
         $assignment = ShiftAssignment::findOrFail($id);
-        
+
         DB::transaction(function () use ($assignment) {
             $assignment->update(['status' => 'accepted']);
-            
+
             $shift = $assignment->shift;
             $start = Carbon::parse($assignment->work_date . ' ' . $shift->start_time);
             $end = Carbon::parse($assignment->work_date . ' ' . $shift->end_time);
-            
+
             while ($start->copy()->addMinutes(30)->lte($end)) {
                 Schedule::create([
                     'doctor_id' => $assignment->doctor_id,
@@ -59,10 +61,18 @@ class DoctorController extends Controller
 
     public function appointments()
     {
-        $appointments = Appointment::where('doctor_id', Auth::id())
-            ->with(['patient', 'schedule'])
-            ->orderBy('id', 'desc')
+        $query = Appointment::whereHas('schedule', function ($query) {
+            $query->where('doctor_id', Auth::id());
+        });
+        // ✅ Thêm lọc theo status nếu có param
+        if (request('status') && request('status') !== 'all') {
+            $query->where('status', request('status'));
+        }
+
+        $appointments = $query->with(['patient', 'schedule'])
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
+
 
         return view('doctor.appointments', compact('appointments'));
     }

@@ -11,20 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('doctor_id');
-            $table->string('room', 50)->nullable();
-            $table->date('work_date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->integer('is_available')->default(1); // 1: Free, 2: Booked, 3: Canceled/Expired
-            $table->timestamps();
-
-            $table->foreign('doctor_id')
-                ->references('user_id')->on('doctors')
-                ->onDelete('cascade');
-        });
+       Schema::create('schedules', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('doctor_id');
+    $table->string('room', 20)->nullable();
+    $table->date('work_date');
+    $table->time('start_time');
+    $table->time('end_time');
+    // ❌ LOẠI BỎ is_available: Trạng thái sẽ được tính bằng cách CHECK tồn tại appointment
+    
+    $table->foreign('doctor_id')->references('user_id')->on('doctors')->onDelete('cascade');
+    // Index giúp query lịch nhanh theo ngày/bác sĩ
+    $table->index(['doctor_id', 'work_date']); 
+    $table->timestamps();
+});
     }
 
     /**

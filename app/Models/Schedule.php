@@ -16,8 +16,6 @@ class Schedule extends Model
         'work_date',
         'start_time',
         'end_time',
-        'slot_duration',
-        'max_patients',
         'is_available',
     ];
     // app/Models/Schedule.php

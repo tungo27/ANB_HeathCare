@@ -1,4 +1,6 @@
-<x-app-layout>
+@extends('layouts.doctor')
+
+@section('content')
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Pending Shifts -->
@@ -71,4 +73,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

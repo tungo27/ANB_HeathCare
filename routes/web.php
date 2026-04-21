@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
         Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');
         Route::post('/reject-shift/{id}', [DoctorController::class, 'rejectShift'])->name('reject_shift');
+        Route::get('/show', [DoctorController::class, 'showAppointment'])->name('appointments.show');
     });
 
     // Patient Routes
