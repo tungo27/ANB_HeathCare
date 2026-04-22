@@ -143,87 +143,65 @@ class AdminController extends Controller
 
     public function scheduleCreate()
     {
-        // Lấy danh sách bác sĩ để hiển thị trên Dropdown
-        $doctors = Doctor::with('user')->get();
-        return view('admin.schedules.create', compact('doctors'));
+        $doctors = Doctor::with(['user', 'specialty'])
+        ->where('is_active', true)
+        ->get();
+        $schedule = new Schedule();
+        return view('admin.schedules.create', compact('doctors', 'schedule'));
     }
 
-    // public function scheduleStore(Request $request)
-    // {
-    //     $request->validate([
-    //         'doctor_id'     => 'required',
-    //         'room'          => 'required|string|max:255',
-    //         'work_date'     => 'required|date|after_or_equal:today',
-    //         'shifts'        => 'required|array|min:1',
-    //         'slot_duration' => 'required|integer|min:10',
-    //     ]);
+    public function scheduleStore(Request $request)
+    {
+        $validated = $request->validate([
+            'doctor_id' => 'required|exists:doctors,user_id',
+            'work_date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'room' => 'nullable|string|max:20',
+            'status' => 'required|in:draft,published,closed',
+            'slot_duration' => 'required|integer|in:15,20,30,45,60',
+            'break_time' => 'required|integer|min:0|max:30',
+            'blocked_times' => 'nullable|json',
+        ]);
 
-    //     $userId = $request->doctor_id;
-    //     $workDate = $request->work_date;
-    //     $room = $request->room;
-    //     $slotDuration = (int) $request->slot_duration;
-    //     $shifts = $request->shifts;
+        DB::beginTransaction();
+        try {
+            $schedule = Schedule::create([
+                'doctor_id' => $validated['doctor_id'],
+                'work_date' => $validated['work_date'],
+                'start_time' => $validated['start_time'],
+                'end_time' => $validated['end_time'],
+                'room' => $validated['room'],
+                'status' => $validated['status'],
+                'slot_duration_minutes' => $validated['slot_duration'],
+                'break_minutes' => $validated['break_time'],
+                'blocked_times' => $validated['blocked_times'],
+            ]);
 
-    //     try {
-    //         DB::beginTransaction();
+            // Tự động sinh slots nếu admin chọn "Lưu & Sinh slots ngay"
+            if ($request->action === 'save_and_generate') {
+                $this->generateSlots($schedule);
+            }
 
-    //         // Tái sử dụng logic chẻ nhỏ ca theo khung giờ
-    //         if (in_array('morning', $shifts)) {
-    //             $this->generateSlotsForPeriod($userId, $workDate, '08:00', '12:00', $slotDuration, $room);
-    //         }
+            DB::commit();
+            return redirect()->route('admin.schedules.slots', $schedule->id)
+                ->with('success', 'Tạo ca thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
+        }
+    }
 
-    //         if (in_array('afternoon', $shifts)) {
-    //             $this->generateSlotsForPeriod($userId, $workDate, '13:30', '17:00', $slotDuration, $room);
-    //         }
+    public function showSlots(Schedule $schedule)
+    {
+        $schedule->load(['slots.appointment.patient', 'doctor.user']);
+        $patients = User::where('role', 'patient')
+        ->select('id', 'full_name as name', 'phone') 
+        ->get();
 
-    //         DB::commit();
-    //         return redirect()->back()->with('success', 'Lịch làm việc đã được tạo thành công.');
-    //     } catch (Exception $e) {
-    //         DB::rollBack();
-    //         Log::error('Lỗi khi tạo lịch làm việc: ' . $e->getMessage());
-    //         return back()->withInput()->with('error', 'Có lỗi xảy ra khi tạo lịch: ' . $e->getMessage());
-    //     }
-    // }
+        return view('admin.schedules.slots', compact('schedule', 'patients'));
+    }
 
-    // // Hàm chẻ thời gian được chuyển từ GenerateDailySchedules Command sang
-    // // private function generateSlotsForPeriod($userId, $workDate, $startTime, $endTime, $slotDuration, $room)
-    // // {
-    // //     $current = Carbon::parse("$workDate $startTime");
-    // //     $end = Carbon::parse("$workDate $endTime");
-
-    // //     while ($current < $end) {
-    // //         $slotStart = $current->copy();
-    // //         $slotEnd = $current->copy()->addMinutes($slotDuration);
-
-    // //         if ($slotEnd > $end) {
-    // //             break;
-    // //         }
-
-    // //         $strStartTime = $slotStart->format('H:i:s');
-    // //         $strEndTime = $slotEnd->format('H:i:s');
-
-    // //         // Kiểm tra xem giờ này đã tồn tại chưa (chống trùng lặp nếu lỡ ấn tạo 2 lần)
-    // //         $exists = Schedule::where('doctor_id', $userId)
-    // //             ->where('work_date', $workDate)
-    // //             ->where('start_time', $strStartTime)
-    // //             ->exists();
-
-    // //         if (!$exists) {
-    // //             Schedule::create([
-    // //                 'doctor_id'     => $userId,
-    // //                 'room'          => $room,
-    // //                 'work_date'     => $workDate,
-    // //                 'start_time'    => $strStartTime,
-    // //                 'end_time'      => $strEndTime,
-    // //                 'slot_duration' => $slotDuration,
-    // //                 'max_patients'  => 10,
-    // //                 'status'        => 1,
-    // //             ]);
-    // //         }
-
-    // //         $current->addMinutes($slotDuration);
-    // //     }
-    // // }
 
 
     // phần Schedule Slot mới
@@ -256,9 +234,149 @@ class AdminController extends Controller
 
         ScheduleSlot::insert($slots);
     }
+
     private function isTimeBlocked(Schedule $schedule, Carbon $start, Carbon $end): bool
     {
         // Logic check if doctor has blocked this specific time range
         return false;
     }
+
+    public function scheduleIndex(Request $request)
+    {
+        $query = Schedule::with(['doctor.user', 'slots']);
+
+        if ($request->filled('doctor_id')) $query->where('doctor_id', $request->doctor_id);
+        if ($request->filled('date')) $query->where('work_date', $request->date);
+        if ($request->filled('status')) $query->where('status', $request->status);
+
+        $schedules = $query->orderBy('work_date', 'desc')->paginate(15);
+        $doctors = Doctor::with('user')->where('is_active', true)->get();
+
+        return view('admin.schedules.index', compact('schedules', 'doctors'));
+    }
+
+    public function toggleSlotStatus(Request $request, ScheduleSlot $slot)
+    {
+        $request->validate(['action' => 'required|in:block,unblock,maintenance']);
+
+        $newStatus = match ($request->action) {
+            'block' => 'blocked',
+            'unblock' => 'available',
+            'maintenance' => 'maintenance',
+        };
+
+        // Không cho đổi trạng thái nếu slot đã booked
+        if ($slot->status === 'booked' && $newStatus !== 'booked') {
+            return response()->json(['success' => false, 'message' => 'Không thể thay đổi slot đã có lịch hẹn.']);
+        }
+
+        $slot->update([
+            'status' => $newStatus,
+            'internal_note' => $request->note ?? ($slot->status === 'blocked' ? 'Block thủ công' : null),
+        ]);
+
+        return response()->json(['success' => true, 'status' => $newStatus]);
+    }
+
+    // ⚡ Bulk action cho slots
+    public function bulkSlotAction(Request $request)
+    {
+        $validated = $request->validate([
+            'schedule_id' => 'required|exists:schedules,id',
+            'new_status' => 'required|in:available,blocked,maintenance',
+            'scope' => 'required|in:all,filtered,selected',
+            'slot_ids' => 'nullable|array',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        $query = ScheduleSlot::where('schedule_id', $validated['schedule_id']);
+
+        if ($validated['scope'] === 'selected' && !empty($validated['slot_ids'])) {
+            $query->whereIn('id', $validated['slot_ids']);
+        } elseif ($validated['scope'] === 'filtered') {
+            // Giả sử frontend gửi thêm filter status
+            if ($request->filled('filter_status')) {
+                $query->where('status', $request->filter_status);
+            }
+        }
+
+        // Chỉ update slots chưa booked để tránh hủy lịch bệnh nhân
+        $affected = $query->where('status', '!=', 'booked')->update([
+            'status' => $validated['new_status'],
+            'internal_note' => $validated['note'],
+        ]);
+
+        return back()->with('success', "Đã cập nhật {$affected} slots.");
+    }
+
+
+    // 🔧 Helper kiểm tra overlap thời gian
+    private function isOverlapping($start, $end, $blockStart, $blockEnd): bool
+    {
+        $bs = Carbon::parse("{$start->format('Y-m-d')} {$blockStart}");
+        $be = Carbon::parse("{$start->format('Y-m-d')} {$blockEnd}");
+        return $start->lt($be) && $end->gt($bs);
+    }
+
+    // app/Http/Controllers/AdminController.php
+
+/**
+ * Gán thủ công bệnh nhân vào một slot trống
+ * POST /admin/slots/assign
+ */
+public function assignSlot(Request $request)
+{
+    $validated = $request->validate([
+        'slot_id'      => 'required|exists:schedule_slots,id',
+        'patient_id'   => 'required|exists:users,id',
+        'symptoms'     => 'nullable|string|max:500',
+    ], [
+        'slot_id.exists' => 'Suất khám không tồn tại.',
+        'patient_id.exists' => 'Bệnh nhân không tồn tại.',
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // 🔒 Lock row để tránh race condition
+        $slot = ScheduleSlot::where('id', $validated['slot_id'])
+            ->lockForUpdate()
+            ->first();
+
+        // Kiểm tra slot còn trống không
+        if (!$slot || $slot->status !== 'available') {
+            DB::rollBack();
+            return back()->withErrors(['slot' => 'Suất khám này vừa được đặt hoặc đã khóa.'])->withInput();
+        }
+
+        // Kiểm tra bệnh nhân có role='patient' không
+        $patient = User::find($validated['patient_id']);
+        if (!$patient || $patient->role !== 'patient') {
+            DB::rollBack();
+            return back()->withErrors(['patient' => 'Người được chọn không phải là bệnh nhân.'])->withInput();
+        }
+
+        // 1. Tạo Appointment
+        $appointment = Appointment::create([
+            'patient_id'   => $patient->id,
+            'schedule_id'  => $slot->schedule_id,
+            'status'       => 'confirmed',
+            'symptoms'     => $validated['symptoms'] ?? null,
+            // 'note' => $validated['note'] ?? null, // Nếu có cột note
+        ]);
+
+        // 2. Cập nhật slot thành booked
+        $slot->update([
+            'status' => 'booked',
+            'appointment_id' => $appointment->id,
+        ]);
+
+        DB::commit();
+        return back()->with('success', '✅ Đã gán bệnh nhân vào suất khám thành công!');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Assign slot error: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
+    }
+}
 }

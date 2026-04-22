@@ -3,10 +3,13 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+
+// Import 3 controllers chính
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\PatientController;
 
+// Trang chủ redirect theo role
 Route::get('/', function () {
     if (Auth::check()) {
         return match (Auth::user()->role) {
@@ -21,47 +24,106 @@ Route::get('/', function () {
 
 require __DIR__ . '/auth.php';
 
+// Profile routes (chung cho tất cả)
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])->group(function () {
-    // Admin Routes
-    Route::prefix('admin')->middleware('role:admin')->name('admin.')->group(function () {
-        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
-        Route::post('/assign-shift', [AdminController::class, 'assignShift'])->name('assign_shift');
-        // Quản lý Lịch làm việc (Schedules)
-        Route::prefix('schedules')->name('schedules.')->group(function () {
-            Route::get('/create', [AdminController::class, 'scheduleCreate'])->name('create');
-            Route::post('/store', [AdminController::class, 'scheduleStore'])->name('store');
-        });
-        Route::prefix('doctors')->name('doctors.')->group(function () {
-            Route::get('/', [AdminController::class, 'doctorManagement'])->name('doctorManagement');
-            Route::get('/create', [AdminController::class, 'doctorCreate'])->name('doctorCreate');
-            Route::post('/store', [AdminController::class, 'doctorStore'])->name('doctorStore');
-            Route::get('/{doctor}/edit', [AdminController::class, 'doctorEdit'])->name('doctorEdit');
-            Route::put('/{doctor}', [AdminController::class, 'doctorUpdate'])->name('doctorUpdate');
-            Route::delete('/{doctor}', [AdminController::class, 'doctorDestroy'])->name('doctorDestroy');
-        });
+// =====================================================
+// 👨‍💼 ADMIN ROUTES
+// =====================================================
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    
+    // Dashboard
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+    Route::post('/assign-shift', [AdminController::class, 'assignShift'])->name('assign_shift');
+    
+    // 👨‍⚕️ Quản lý Bác sĩ
+    Route::prefix('doctors')->name('doctors.')->group(function () {
+        Route::get('/', [AdminController::class, 'doctorManagement'])->name('doctorManagement');
+        Route::get('/create', [AdminController::class, 'doctorCreate'])->name('doctorCreate');
+        Route::post('/store', [AdminController::class, 'doctorStore'])->name('doctorStore');
+        Route::get('/{doctor}/edit', [AdminController::class, 'doctorEdit'])->name('doctorEdit');
+        Route::put('/{doctor}', [AdminController::class, 'doctorUpdate'])->name('doctorUpdate');
+        Route::delete('/{doctor}', [AdminController::class, 'doctorDestroy'])->name('doctorDestroy');
     });
-
-    // Doctor Routes
-    Route::prefix('doctor')->middleware('role:doctor')->name('doctor.')->group(function () {
-        Route::get('/', [DoctorController::class, 'dashboard'])->name('dashboard');
-        Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
-        Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');
-        Route::post('/reject-shift/{id}', [DoctorController::class, 'rejectShift'])->name('reject_shift');
-        Route::get('/show', [DoctorController::class, 'showAppointment'])->name('appointments.show');
+    
+    // 📋 Quản lý Ca làm việc (Schedules)
+    Route::prefix('schedules')->name('schedules.')->group(function () {
+        Route::get('/', [AdminController::class, 'scheduleIndex'])->name('index');
+        Route::get('/create', [AdminController::class, 'scheduleCreate'])->name('create');
+        Route::post('/', [AdminController::class, 'scheduleStore'])->name('store');
+        Route::get('/{schedule}/edit', [AdminController::class, 'scheduleEdit'])->name('edit');
+        Route::put('/{schedule}', [AdminController::class, 'scheduleUpdate'])->name('update');
+        Route::delete('/{schedule}', [AdminController::class, 'scheduleDestroy'])->name('destroy');
+        
+        
+        // ⭐ Custom routes cho Schedule Slots
+        Route::get('/{schedule}/slots', [AdminController::class, 'showSlots'])->name('slots');
+        Route::post('/slots/assign', [AdminController::class, 'assignSlot'])->name('slots.assign');
+        Route::post('/{schedule}/generate-slots', [AdminController::class, 'generateSlots'])->name('generate-slots');
+        Route::post('/slots/{slot}/toggle', [AdminController::class, 'toggleSlotStatus'])->name('slots.toggle');
+        Route::post('/slots/bulk-action', [AdminController::class, 'bulkSlotAction'])->name('slots.bulk-action');
     });
+    
+    // 📊 Báo cáo
+    Route::get('/reports/slots', [AdminController::class, 'reportSlots'])->name('reports.slots');
+});
 
-    // Patient Routes
-    Route::prefix('patient')->middleware('role:patient')->name('patient.')->group(function () {
-        Route::get('/', [PatientController::class, 'index'])->name('dashboard');
-        Route::get('/booking/{id}', [PatientController::class, 'showBooking'])->name('booking');
-        Route::get('/search', [PatientController::class, 'search'])->name('search');
-        Route::get('/get-slots', [PatientController::class, 'getSlots'])->name('get_slots');
-        Route::post('/book', [PatientController::class, 'book'])->name('book');
+// =====================================================
+// 👨‍⚕️ DOCTOR ROUTES (ĐÃ SỬA TÊN METHOD CHO KHỚP)
+// =====================================================
+Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->group(function () {
+    
+    // Dashboard + Appointments list
+    Route::get('/', [DoctorController::class, 'dashboard'])->name('dashboard');
+    Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
+    Route::get('/appointments/{appointment}', [DoctorController::class, 'showAppointment'])->name('appointments.show');
+    
+    // Shift assignments
+    Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');
+    Route::post('/reject-shift/{id}', [DoctorController::class, 'rejectShift'])->name('reject_shift');
+    
+    // 📅 Lịch làm việc với Schedule Slots
+    // ✅ SỬA: scheduleIndex() → index() (method đã có trong controller)
+    // ✅ SỬA: scheduleDetail() → detail() (method đã có trong controller)
+    Route::prefix('schedule')->name('schedule.')->group(function () {
+        Route::get('/', [DoctorController::class, 'index'])->name('index');
+        Route::get('/api/events', [DoctorController::class, 'calendarEvents'])->name('api.events');
+        Route::get('/{schedule}', [DoctorController::class, 'detail'])->name('detail');
+    });
+    
+    // 🩺 Xử lý khám bệnh (complete/cancel appointment)
+    // ✅ SỬA: completeAppointment() → complete()
+    // ✅ SỬA: cancelAppointment() → cancel()
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::put('/{appointment}/complete', [DoctorController::class, 'complete'])->name('complete');
+        Route::put('/{appointment}/cancel', [DoctorController::class, 'cancel'])->name('cancel');
+    });
+});
+
+// =====================================================
+// 👤 PATIENT ROUTES
+// =====================================================
+Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
+    
+    // Dashboard + Search doctors
+    Route::get('/', [PatientController::class, 'index'])->name('dashboard');
+    Route::get('/search', [PatientController::class, 'search'])->name('search');
+    
+    // 🎯 Booking với Schedule Slots
+    Route::prefix('booking')->name('booking.')->group(function () {
+        Route::get('/doctors', [PatientController::class, 'listDoctors'])->name('doctors');
+        Route::get('/doctors/{doctor:username}/slots', [PatientController::class, 'selectSlot'])->name('select-slot');
+        Route::post('/confirm', [PatientController::class, 'bookWithSlot'])->name('confirm');
+    });
+    
+    // Quản lý lịch hẹn đã đặt
+    Route::prefix('appointments')->name('appointments.')->group(function () {
+        Route::get('/', [PatientController::class, 'myAppointments'])->name('index');
+        Route::get('/{appointment}', [PatientController::class, 'showAppointment'])->name('show');
+        Route::put('/{appointment}/cancel', [PatientController::class, 'cancelAppointment'])->name('cancel');
     });
 });

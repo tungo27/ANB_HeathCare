@@ -32,6 +32,6 @@ class Appointment extends Model
     // ✅ Thêm quan hệ tới slot cụ thể
     public function slot()
     {
-        return $this->hasOne(ScheduleSlot::class);
+        return $this->hasOne(ScheduleSlot::class, 'appointment_id');
     }
 }

@@ -76,4 +76,90 @@ class DoctorController extends Controller
 
         return view('doctor.appointments', compact('appointments'));
     }
+
+
+     public function index()
+    {
+        return view('doctor.schedule');
+    }
+
+     // 📡 API trả về events cho FullCalendar
+    public function calendarEvents()
+    {
+        $doctorId = Auth::user()->doctor->user_id;
+        $schedules = Schedule::where('doctor_id', $doctorId)
+            ->where('status', 'published')
+            ->get(['id', 'work_date', 'start_time', 'end_time']);
+
+        $events = $schedules->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'title' => "Ca khám: {$s->start_time} - {$s->end_time}",
+                'start' => "{$s->work_date}T{$s->start_time}",
+                'end' => "{$s->work_date}T{$s->end_time}",
+                'backgroundColor' => '#0d6efd',
+                'url' => route('doctor.schedule.detail', $s->id),
+            ];
+        });
+
+        return response()->json($events);
+    }
+
+     // 📋 Chi tiết ca + danh sách slots
+    public function detail(Schedule $schedule)
+    {
+        // Kiểm tra quyền: chỉ bác sĩ được phân ca mới xem được
+        if ($schedule->doctor_id !== Auth::user()->doctor->user_id) {
+            abort(403, 'Bạn không có quyền xem ca này.');
+        }
+
+        $schedule->load(['slots.appointment.patient', 'slots.appointment']);
+        return view('doctor.appointments.detail', compact('schedule'));
+    }
+
+      // 🩺 Hoàn tất khám & lưu kết quả
+    public function complete(Request $request, Appointment $appointment)
+    {
+        // Chỉ bác sĩ phụ trách mới được hoàn tất
+        if ($appointment->schedule->doctor_id !== Auth::user()->doctor->user_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'diagnosis_result' => 'required|string|max:1000',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+            $appointment->update([
+                'status' => 'completed',
+                'diagnosis_result' => $request->diagnosis_result,
+                // 'note' => $request->note, // Nếu có cột note
+            ]);
+        });
+
+        return back()->with('success', '✅ Đã lưu kết quả khám và hoàn tất lịch hẹn.');
+    }
+
+
+    // ❌ Hủy/Từ chối lịch hẹn (nếu cần)
+    public function cancel(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+            $appointment->update([
+                'status' => 'rejected', // hoặc 'cancelled' tùy nghiệp vụ
+                'cancellation_reason' => $request->reason,
+                'cancelled_at' => now(),
+            ]);
+
+            // Giải phóng slot
+            $appointment->slot()->update(['status' => 'available', 'appointment_id' => null]);
+        });
+
+        return back()->with('success', 'Lịch hẹn đã được hủy.');
+    }
 }
