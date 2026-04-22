@@ -108,6 +108,7 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 // 👤 PATIENT ROUTES
 // =====================================================
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
+    Route::get('/booking/{id}', [PatientController::class, 'booking'])->name('booking');
     
     // Dashboard + Search doctors
     Route::get('/', [PatientController::class, 'index'])->name('dashboard');
