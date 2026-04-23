@@ -64,17 +64,48 @@ class DoctorController extends Controller
         $query = Appointment::whereHas('schedule', function ($query) {
             $query->where('doctor_id', Auth::id());
         });
+
         // ✅ Thêm lọc theo status nếu có param
-        if (request('status') && request('status') !== 'all') {
-            $query->where('status', request('status'));
+        $status = request('status');
+        if ($status && $status !== 'all') {
+            if ($status === 'pending') {
+                $query->where('status', 'pending');
+            } elseif ($status === 'confirmed') {
+                $query->where('status', 'confirmed');
+            } elseif ($status === 'completed') {
+                $query->where('status', 'completed');
+            } elseif ($status === 'rejected') {
+                $query->whereIn('status', ['rejected', 'cancelled', 'no_show']);
+            }
         }
 
-        $appointments = $query->with(['patient', 'schedule'])
+        $appointments = $query->with(['patient', 'schedule', 'slot'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-
         return view('doctor.appointments', compact('appointments'));
+    }
+
+    public function acceptAppointment(Appointment $appointment)
+    {
+        // Ensure the appointment belongs to this doctor
+        if ($appointment->schedule->doctor_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $appointment->update(['status' => 'confirmed']);
+        return back()->with('success', 'Đã chấp nhận lịch hẹn.');
+    }
+
+    public function rejectAppointment(Appointment $appointment)
+    {
+        // Ensure the appointment belongs to this doctor
+        if ($appointment->schedule->doctor_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $appointment->update(['status' => 'rejected']);
+        return back()->with('info', 'Đã từ chối lịch hẹn.');
     }
 
 

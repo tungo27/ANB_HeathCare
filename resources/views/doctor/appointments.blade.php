@@ -26,20 +26,26 @@
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('doctor.appointments', ['status' => 'pending']) }}"
-                                class="nav-link {{ request('status') == 'pending' ? 'active fw-bold text-warning' : 'text-secondary' }}">
-                                Chờ khám
+                                class="nav-link {{ request('status') == 'pending' ? 'active fw-bold text-secondary' : 'text-secondary' }}">
+                                <i class="bi bi-clock"></i> Chờ duyệt
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('doctor.appointments', ['status' => 'confirmed']) }}"
+                                class="nav-link {{ request('status') == 'confirmed' ? 'active fw-bold text-warning' : 'text-secondary' }}">
+                                <i class="bi bi-calendar-check"></i> Chờ khám
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('doctor.appointments', ['status' => 'completed']) }}"
                                 class="nav-link {{ request('status') == 'completed' ? 'active fw-bold text-success' : 'text-secondary' }}">
-                                Đã khám
+                                <i class="bi bi-check-circle"></i> Đã khám
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ route('doctor.appointments', ['status' => 'cancelled']) }}"
-                                class="nav-link {{ request('status') == 'cancelled' ? 'active fw-bold text-danger' : 'text-secondary' }}">
-                                Đã hủy
+                            <a href="{{ route('doctor.appointments', ['status' => 'rejected']) }}"
+                                class="nav-link {{ request('status') == 'rejected' ? 'active fw-bold text-danger' : 'text-secondary' }}">
+                                <i class="bi bi-x-circle"></i> Đã hủy
                             </a>
                         </li>
                     </ul>
@@ -66,7 +72,7 @@
                                     {{-- 2. Ngày/Giờ --}}
                                     <td>
                                         {{ \Carbon\Carbon::parse($item->schedule->work_date)->format('d/m/Y') }}<br>
-                                        <small class="text-muted">{{ $item->schedule->time_slot ?? 'Chưa cập nhật' }}</small>
+                                        <small class="text-muted">{{ $item->slot ? \Carbon\Carbon::parse($item->slot->slot_start_time)->format('H:i') : 'Chưa cập nhật' }}</small>
                                     </td>
 
                                     {{-- 3. Triệu chứng --}}
@@ -75,6 +81,9 @@
                                     {{-- 4. Trạng thái (Đã bổ sung đầy đủ theo Migration) --}}
                                     <td>
                                         @switch($item->status)
+                                        @case('pending')
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3">Chờ duyệt</span>
+                                        @break
                                         @case('completed')
                                         <span class="badge rounded-pill bg-success-subtle text-success px-3">Đã khám</span>
                                         @break
@@ -102,10 +111,29 @@
 
                                     {{-- 5. Thao tác --}}
                                     <td class="text-center">
+                                        @if($item->status === 'pending')
+                                        <div class="d-flex gap-2 justify-content-center">
+                                            <form action="{{ route('doctor.appointments.accept', $item->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PUT')
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                                    <i class="bi bi-check-circle"></i> Chấp nhận
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('doctor.appointments.reject', $item->id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('PUT')
+                                                <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3">
+                                                    <i class="bi bi-x-circle"></i> Từ chối
+                                                </button>
+                                            </form>
+                                        </div>
+                                        @else
                                         <a href="{{ route('doctor.appointments.show', $item->id) }}"
                                             class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                             Chi tiết
                                         </a>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty

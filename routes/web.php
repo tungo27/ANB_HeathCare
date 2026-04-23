@@ -81,6 +81,8 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     Route::get('/', [DoctorController::class, 'dashboard'])->name('dashboard');
     Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
     Route::get('/appointments/{appointment}', [DoctorController::class, 'showAppointment'])->name('appointments.show');
+    Route::put('/appointments/{appointment}/accept', [DoctorController::class, 'acceptAppointment'])->name('appointments.accept');
+    Route::put('/appointments/{appointment}/reject', [DoctorController::class, 'rejectAppointment'])->name('appointments.reject');
 
     // Shift assignments
     Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');

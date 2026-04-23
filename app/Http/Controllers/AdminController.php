@@ -367,7 +367,7 @@ class AdminController extends Controller
             $appointment = Appointment::create([
                 'patient_id'   => $patient->id,
                 'schedule_id'  => $slot->schedule_id,
-                'status'       => 'confirmed',
+                'status'       => 'pending',
                 'symptoms'     => $validated['symptoms'] ?? null,
                 // 'note' => $validated['note'] ?? null, // Nếu có cột note
             ]);

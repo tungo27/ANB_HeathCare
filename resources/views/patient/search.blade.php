@@ -1,41 +1,26 @@
-<x-app-layout>
-    <div class="py-12 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold text-blue-900 mb-4">Find Your Doctor</h2>
-                <form action="{{ route('patient.search') }}" method="GET" class="flex gap-4">
-                    <input type="text" name="search" value="{{ $searchTerm ?? '' }}" placeholder="Search by name or specialty..." class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg font-semibold transition-colors shadow-md">Search</button>
-                </form>
-            </div>
+@extends('layouts.patient')
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse($doctors as $doctor)
-                <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-shadow duration-300">
-                    <div class="p-6">
-                        <div class="flex items-center space-x-4 mb-4">
-                            <img src="{{ $doctor->user->avatar_url ?? 'https://via.placeholder.com/150' }}" class="w-16 h-16 rounded-full object-cover border-2 border-emerald-100">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900">{{ $doctor->user->full_name }}</h3>
-                                <p class="text-emerald-600 font-medium">{{ $doctor->Specialty->name }}</p>
-                            </div>
-                        </div>
-                        <p class="text-gray-600 text-sm line-clamp-3 mb-6">{{ $doctor->bio }}</p>
-                        <div class="flex items-center justify-between mt-auto">
-                            <div class="text-sm">
-                                <span class="text-gray-500 block">Experience</span>
-                                <span class="font-bold text-gray-900">{{ $doctor->years_of_experience }} Years</span>
-                            </div>
-                            <a href="{{ route('patient.booking', $doctor->user_id) }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-bold transition-colors">
-                                Book Now
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                @empty
-                <div class="col-span-full py-12 text-center text-gray-500 italic text-lg">No doctors found matching your criteria.</div>
-                @endforelse
-            </div>
+@section('content')
+<div class="container mx-auto px-4 py-10">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">
+        Kết quả tìm kiếm cho: <span class="text-teal-600">"{{ $searchTerm }}"</span>
+    </h2>
+
+    @if($doctors->isEmpty())
+        <div class="bg-white p-10 rounded-3xl shadow-md text-center">
+            <p class="text-gray-500 italic">Không tìm thấy bác sĩ nào phù hợp với yêu cầu của bạn.</p>
+            <a href="{{ route('patient.dashboard') }}" class="inline-block mt-4 text-teal-600 font-bold hover:underline">
+                 Quay lại trang chủ
+            </a>
         </div>
-    </div>
-</x-app-layout>
+    @else
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            @foreach($doctors as $doctor)
+                <div class="transform transition duration-300 hover:-translate-y-2">
+                    <x-doctor-card :doctor="$doctor" />
+                </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+@endsection

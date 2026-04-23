@@ -27,6 +27,29 @@ class PatientController extends Controller
         return view('patient.dashboard', compact('doctors', 'specialties'));
     }
 
+    public function search(Request $request)
+    {
+        $specialties = Specialties::all();
+        $search = trim($request->get('search', ''));
+
+        $query = Doctor::with(['user', 'specialty']);
+
+        if ($search !== '') {
+            $query->where(function ($query) use ($search) {
+                $query->whereHas('user', function ($query) use ($search) {
+                    $query->where('full_name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('specialty', function ($query) use ($search) {
+                    $query->where('name', $search);
+                });
+            });
+        }
+
+        $doctors = $query->paginate(12)->withQueryString();
+        $searchTerm = $search;
+        return view('patient.search', compact('doctors', 'searchTerm'));
+    }
+
     // Hiển thị trang chọn suất khám (Slots)
     public function selectSlot(Doctor $doctor, Request $request)
     {
@@ -85,7 +108,7 @@ class PatientController extends Controller
 
                 // ✅ GIỮ LẠI CÁC DÒNG NÀY:
                 'schedule_id'     => $slot->schedule_id,
-                'status'          => 'confirmed',
+                'status'          => 'pending',
                 'symptoms'        => $request->symptoms,
             ]);
 
@@ -104,7 +127,7 @@ class PatientController extends Controller
     public function myAppointments()
     {
         $appointments = Appointment::where('patient_id', Auth::id())
-            ->with(['doctor.user', 'schedule'])
+            ->with(['doctor.user', 'doctor.specialty', 'schedule', 'slot'])
             ->latest()
             ->get();
         return view('patient.appointments.index', compact('appointments'));
