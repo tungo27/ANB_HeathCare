@@ -40,17 +40,17 @@
                                     <div class="text-sm text-gray-900">
                                         {{ \Carbon\Carbon::parse($appointment->schedule->work_date)->format('d/m/Y') }}
                                     </div>
+
                                     {{-- <div class="text-sm text-gray-500">
                                         {{ $appointment->slot ? \Carbon\Carbon::parse($appointment->slot->slot_start_time)->format('H:i') : 'N/A' }}
                                     </div> --}}
+
+                                    <div class="text-sm text-gray-500">
+                                        {{ $appointment->slot ? \Carbon\Carbon::parse($appointment->slot->slot_start_time)->format('H:i') : 'N/A' }}
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        {{ $appointment->symptoms ? Str::limit($appointment->symptoms, 50) : '-' }}
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @switch($appointment->status)
                                         @case('pending')
                                             <span
                                                 class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
@@ -106,22 +106,22 @@
                                                 {{ $appointment->status }}
                                             </span>
                                     @endswitch
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ route('patient.appointments.show', $appointment->id) }}"
-                                        class="text-indigo-600 hover:text-indigo-900">Xem chi tiết</a>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ route('patient.appointments.show', $appointment->id) }}"
+                                    class="text-indigo-600 hover:text-indigo-900">Xem chi tiết</a>
+                            </td>
+                        </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    Bạn chưa có lịch hẹn nào.
                                 </td>
                             </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                        Bạn chưa có lịch hẹn nào.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
-    @endsection
+    </div>
+@endsection
