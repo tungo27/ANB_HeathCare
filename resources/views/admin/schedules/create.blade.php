@@ -134,9 +134,9 @@
                     <a href="{{ route('admin.schedules.index') }}" class="btn btn-outline-secondary">
                         ↩ Hủy
                     </a>
-                    <button type="submit" name="action" value="save" class="btn btn-primary">
+                    {{-- <button type="submit" name="action" value="save" class="btn btn-primary">
                         💾 Lưu ca
-                    </button>
+                    </button> --}}
                     <button type="submit" name="action" value="save_and_generate" class="btn btn-success">
                         ✨ Lưu & Sinh slots ngay
                     </button>

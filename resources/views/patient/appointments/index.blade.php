@@ -51,77 +51,78 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">
-                                        @case('pending')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                                Chờ duyệt
-                                            </span>
-                                        @break
+                                        @switch($appointment->status)
+                                            @case('pending')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    Chờ duyệt
+                                                </span>
+                                            @break
 
-                                        @case('confirmed')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                Đã xác nhận
-                                            </span>
-                                        @break
+                                            @case('confirmed')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    Đã xác nhận
+                                                </span>
+                                            @break
 
-                                        @case('completed')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                                Đã khám
-                                            </span>
-                                        @break
+                                            @case('completed')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                    Đã khám
+                                                </span>
+                                            @break
 
-                                        @case('cancelled')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                                Đã hủy
-                                            </span>
-                                        @break
+                                            @case('cancelled')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Đã hủy
+                                                </span>
+                                            @break
 
-                                        @case('rejected')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                                Bác sĩ từ chối
-                                            </span>
-                                        @break
+                                            @case('rejected')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                    Bác sĩ từ chối
+                                                </span>
+                                            @break
 
-                                        @case('no_show')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                Không đến
-                                            </span>
-                                        @break
+                                            @case('no_show')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    Không đến
+                                                </span>
+                                            @break
 
-                                        @case('rescheduled')
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                                Đã đổi lịch
-                                            </span>
-                                        @break
+                                            @case('rescheduled')
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                    Đã đổi lịch
+                                                </span>
+                                            @break
 
-                                        @default
-                                            <span
-                                                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                                {{ $appointment->status }}
-                                            </span>
-                                    @endswitch
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('patient.appointments.show', $appointment->id) }}"
-                                    class="text-indigo-600 hover:text-indigo-900">Xem chi tiết</a>
-                            </td>
-                        </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                    Bạn chưa có lịch hẹn nào.
+                                            @default
+                                                <span
+                                                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                    {{ $appointment->status }}
+                                                </span>
+                                        @endswitch
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <a href="{{ route('patient.appointments.show', $appointment->id) }}"
+                                        class="text-indigo-600 hover:text-indigo-900">Xem chi tiết</a>
                                 </td>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                        Bạn chưa có lịch hẹn nào.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-    </div>
-@endsection
+    @endsection
