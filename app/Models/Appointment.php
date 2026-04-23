@@ -10,8 +10,19 @@ class Appointment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'schedule_id',
-        'status', 'symptoms', 'note',
+        'patient_id',
+        'schedule_id',
+        'status',
+        'symptoms',
+        'note',
+        'diagnosis_result',
+        'cancellation_reason',
+        'rescheduled_from_id',
+        'follow_up_appointment_id',  // ✅ Thêm field follow-up
+        'confirmed_at',
+        'completed_at',
+        'cancelled_at',
+        'cancelled_by',
     ];
 
     protected $casts = [
@@ -20,8 +31,29 @@ class Appointment extends Model
         'updated_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
-        'cancelled_at' => 'datetime',  
+        'cancelled_at' => 'datetime',
     ];
+
+    public function originalAppointment()
+    {
+        return $this->belongsTo(Appointment::class, 'rescheduled_from_id');
+    }
+
+    /**
+     * Appointment follow-up (khi appointment này có lịch hẹn lại)
+     */
+    public function followUpAppointment()
+    {
+        return $this->hasOne(Appointment::class, 'rescheduled_from_id');
+    }
+
+    /**
+     * User đã hủy appointment (nếu có)
+     */
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
 
     public function patient()
     {

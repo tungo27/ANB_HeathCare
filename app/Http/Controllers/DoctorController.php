@@ -78,12 +78,12 @@ class DoctorController extends Controller
     }
 
 
-     public function index()
+    public function index()
     {
         return view('doctor.schedule');
     }
 
-     // 📡 API trả về events cho FullCalendar
+    // 📡 API trả về events cho FullCalendar
     public function calendarEvents()
     {
         $doctorId = Auth::user()->doctor->user_id;
@@ -105,7 +105,7 @@ class DoctorController extends Controller
         return response()->json($events);
     }
 
-     // 📋 Chi tiết ca + danh sách slots
+    // 📋 Chi tiết ca + danh sách slots
     public function detail(Schedule $schedule)
     {
         // Kiểm tra quyền: chỉ bác sĩ được phân ca mới xem được
@@ -117,7 +117,7 @@ class DoctorController extends Controller
         return view('doctor.appointments.detail', compact('schedule'));
     }
 
-      // 🩺 Hoàn tất khám & lưu kết quả
+    // 🩺 Hoàn tất khám & lưu kết quả
     public function complete(Request $request, Appointment $appointment)
     {
         // Chỉ bác sĩ phụ trách mới được hoàn tất
@@ -163,31 +163,31 @@ class DoctorController extends Controller
         return back()->with('success', 'Lịch hẹn đã được hủy.');
     }
 
-     public function showAppointment(Appointment $appointment)
+    public function showAppointment(Appointment $appointment)
     {
         // 🔐 Kiểm tra quyền: Chỉ bác sĩ được phân công mới xem được
         if ($appointment->schedule->doctor_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền xem lịch hẹn này.');
         }
 
-        $appointment->load(['patient', 'schedule', 'slot', 'followUp']);
+        $appointment->load(['patient', 'schedule', 'slot', 'followUpAppointment', 'cancelledBy']);
 
-        // ✅ Load danh sách slot rảnh của bác sĩ để đặt lịch hẹn lại (7 ngày tới)
-        $availableSlots = Schedule::where('doctor_id', Auth::id())
-            ->where('is_available', true)
+        // ✅ Load available slots cho follow-up modal
+        $availableSlots = \App\Models\Schedule::where('doctor_id', Auth::id())
             ->where('work_date', '>=', now()->format('Y-m-d'))
             ->where('work_date', '<=', now()->addDays(7)->format('Y-m-d'))
             ->whereDoesntHave('appointment', function ($q) {
-                $q->where('status', '!=', 'cancelled');
+                $q->whereNotIn('status', ['cancelled', 'rejected', 'no_show']);
             })
+
             ->orderBy('work_date')
             ->orderBy('start_time')
             ->get(['id', 'work_date', 'start_time', 'end_time'])
             ->map(function ($s) {
                 return [
                     'id' => $s->id,
-                    'label' => Carbon::parse($s->work_date)->format('d/m/Y') . ' | ' . $s->start_time . '-' . $s->end_time,
-                    'datetime' => Carbon::parse($s->work_date . ' ' . $s->start_time)->format('Y-m-d H:i:s'),
+                    'label' => \Carbon\Carbon::parse($s->work_date)->format('d/m/Y') . ' | ' . $s->start_time . '-' . $s->end_time,
+                   'datetime' => \Carbon\Carbon::parse(\Carbon\Carbon::parse($s->work_date)->toDateString() . ' ' . $s->start_time)->format('Y-m-d H:i:s'),
                 ];
             });
 
@@ -197,7 +197,7 @@ class DoctorController extends Controller
     /**
      * Cập nhật trạng thái lịch hẹn (confirm/complete/cancel)
      */
-     public function updateStatus(Request $request, Appointment $appointment)
+    public function updateStatus(Request $request, Appointment $appointment)
     {
         if ($appointment->schedule->doctor_id !== Auth::id()) {
             abort(403);
@@ -242,7 +242,7 @@ class DoctorController extends Controller
             'reschedule' => '🔄 Đã yêu cầu đổi lịch',
         });
     }
-    
+
     public function createFollowUp(Request $request, Appointment $appointment)
     {
         if ($appointment->schedule->doctor_id !== Auth::id()) {
