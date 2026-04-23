@@ -16,39 +16,56 @@
             <div class="container-fluid">
                 <div class="card shadow-sm p-4 border-0">
 
-                    {{-- Tab lọc trạng thái --}}
-                    <ul class="nav nav-tabs mb-4">
-                        <li class="nav-item">
-                            <a href="{{ route('doctor.appointments') }}"
-                                class="nav-link {{ !request('status') || request('status') == 'all' ? 'active fw-bold' : 'text-secondary' }}">
-                                Tất cả
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('doctor.appointments', ['status' => 'pending']) }}"
-                                class="nav-link {{ request('status') == 'pending' ? 'active fw-bold text-secondary' : 'text-secondary' }}">
-                                <i class="bi bi-clock"></i> Chờ duyệt
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('doctor.appointments', ['status' => 'confirmed']) }}"
-                                class="nav-link {{ request('status') == 'confirmed' ? 'active fw-bold text-warning' : 'text-secondary' }}">
-                                <i class="bi bi-calendar-check"></i> Chờ khám
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('doctor.appointments', ['status' => 'completed']) }}"
-                                class="nav-link {{ request('status') == 'completed' ? 'active fw-bold text-success' : 'text-secondary' }}">
-                                <i class="bi bi-check-circle"></i> Đã khám
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('doctor.appointments', ['status' => 'rejected']) }}"
-                                class="nav-link {{ request('status') == 'rejected' ? 'active fw-bold text-danger' : 'text-secondary' }}">
-                                <i class="bi bi-x-circle"></i> Đã hủy
-                            </a>
-                        </li>
-                    </ul>
+                    @php
+    // Xác định nhãn hiển thị cho nút chính
+    $statusLabels = [
+        'all'       => ['label' => 'Tất cả', 'class' => 'text-secondary'],
+        'pending'   => ['label' => 'Chờ duyệt', 'class' => 'text-secondary'],
+        'confirmed' => ['label' => 'Chờ khám', 'class' => 'text-warning'],
+        'completed' => ['label' => 'Đã khám', 'class' => 'text-success'],
+        'rejected'  => ['label' => 'Đã hủy', 'class' => 'text-danger'],
+    ];
+    
+    $currentStatus = request('status', 'all');
+    $currentLabel = $statusLabels[$currentStatus]['label'] ?? 'Tất cả';
+    $currentClass = $statusLabels[$currentStatus]['class'] ?? 'text-secondary';
+@endphp
+
+<div class="dropdown mb-4">
+    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        Lọc theo: <span class="fw-bold {{ $currentClass }}">{{ $currentLabel }}</span>
+    </button>
+    <ul class="dropdown-menu">
+        <li>
+            <a class="dropdown-item {{ !request('status') || request('status') == 'all' ? 'active' : '' }}" 
+               href="{{ route('doctor.appointments') }}">Tất cả</a>
+        </li>
+        <li>
+            <a class="dropdown-item {{ request('status') == 'pending' ? 'active' : '' }}" 
+               href="{{ route('doctor.appointments', ['status' => 'pending']) }}">
+               <i class="bi bi-clock"></i> Chờ duyệt
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item {{ request('status') == 'confirmed' ? 'active' : '' }}" 
+               href="{{ route('doctor.appointments', ['status' => 'confirmed']) }}">
+               <i class="bi bi-calendar-check text-warning"></i> Chờ khám
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item {{ request('status') == 'completed' ? 'active' : '' }}" 
+               href="{{ route('doctor.appointments', ['status' => 'completed']) }}">
+               <i class="bi bi-check-circle text-success"></i> Đã khám
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item {{ request('status') == 'rejected' ? 'active' : '' }}" 
+               href="{{ route('doctor.appointments', ['status' => 'rejected']) }}">
+               <i class="bi bi-x-circle text-danger"></i> Đã hủy
+            </a>
+        </li>
+    </ul>
+</div>
 
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">

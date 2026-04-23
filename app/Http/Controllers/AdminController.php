@@ -382,7 +382,7 @@ class AdminController extends Controller
             return back()->with('success', '✅ Đã gán bệnh nhân vào suất khám thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Assign slot error: ' . $e->getMessage());
+            Log::error('Assign slot error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
         }
     }
