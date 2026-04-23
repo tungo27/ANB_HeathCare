@@ -144,8 +144,8 @@ class AdminController extends Controller
     public function scheduleCreate()
     {
         $doctors = Doctor::with(['user', 'specialty'])
-        ->where('is_active', true)
-        ->get();
+            ->where('is_active', true)
+            ->get();
         $schedule = new Schedule();
         return view('admin.schedules.create', compact('doctors', 'schedule'));
     }
@@ -196,8 +196,8 @@ class AdminController extends Controller
     {
         $schedule->load(['slots.appointment.patient', 'doctor.user']);
         $patients = User::where('role', 'patient')
-        ->select('id', 'full_name as name', 'phone') 
-        ->get();
+            ->select('id', 'full_name as name', 'phone')
+            ->get();
 
         return view('admin.schedules.slots', compact('schedule', 'patients'));
     }
@@ -208,31 +208,39 @@ class AdminController extends Controller
     public function generateSlots(Schedule $schedule)
     {
         $slots = [];
-        $currentTime = Carbon::parse("{$schedule->work_date} {$schedule->start_time}");
-        $endTime = Carbon::parse("{$schedule->work_date} {$schedule->end_time}");
+
+        // ✅ TRÍCH XUẤT CHỈ PHẦN NGÀY (Y-m-d)
+        $dateStr = Carbon::parse($schedule->work_date)->format('Y-m-d');
+
+        // Ghép ngày với giờ start/end chính xác
+        $currentTime = Carbon::parse("{$dateStr} {$schedule->start_time}");
+        $endTime = Carbon::parse("{$dateStr} {$schedule->end_time}");
+
         $slotNumber = 1;
 
         while ($currentTime->copy()->addMinutes(30)->lte($endTime)) {
             $slotEnd = $currentTime->copy()->addMinutes(30);
 
-            // Skip blocked times
             if (!$this->isTimeBlocked($schedule, $currentTime, $slotEnd)) {
                 $slots[] = [
-                    'schedule_id' => $schedule->id,
-                    'slot_number' => $slotNumber,
+                    'schedule_id'     => $schedule->id,
+                    'slot_number'     => $slotNumber,
                     'slot_start_time' => $currentTime->format('H:i:s'),
-                    'slot_end_time' => $slotEnd->format('H:i:s'),
-                    'status' => 'available',
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'slot_end_time'   => $slotEnd->format('H:i:s'),
+                    'status'          => 'available',
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
                 ];
                 $slotNumber++;
             }
 
-            $currentTime = $slotEnd->addMinutes(5); // + break time
+            // Tăng thời gian: 30 phút khám + 5 phút nghỉ
+            $currentTime = $slotEnd->addMinutes(5);
         }
 
-        ScheduleSlot::insert($slots);
+        if (!empty($slots)) {
+            ScheduleSlot::insert($slots);
+        }
     }
 
     private function isTimeBlocked(Schedule $schedule, Carbon $start, Carbon $end): bool
@@ -320,63 +328,62 @@ class AdminController extends Controller
 
     // app/Http/Controllers/AdminController.php
 
-/**
- * Gán thủ công bệnh nhân vào một slot trống
- * POST /admin/slots/assign
- */
-public function assignSlot(Request $request)
-{
-    $validated = $request->validate([
-        'slot_id'      => 'required|exists:schedule_slots,id',
-        'patient_id'   => 'required|exists:users,id',
-        'symptoms'     => 'nullable|string|max:500',
-    ], [
-        'slot_id.exists' => 'Suất khám không tồn tại.',
-        'patient_id.exists' => 'Bệnh nhân không tồn tại.',
-    ]);
-
-    DB::beginTransaction();
-    try {
-        // 🔒 Lock row để tránh race condition
-        $slot = ScheduleSlot::where('id', $validated['slot_id'])
-            ->lockForUpdate()
-            ->first();
-
-        // Kiểm tra slot còn trống không
-        if (!$slot || $slot->status !== 'available') {
-            DB::rollBack();
-            return back()->withErrors(['slot' => 'Suất khám này vừa được đặt hoặc đã khóa.'])->withInput();
-        }
-
-        // Kiểm tra bệnh nhân có role='patient' không
-        $patient = User::find($validated['patient_id']);
-        if (!$patient || $patient->role !== 'patient') {
-            DB::rollBack();
-            return back()->withErrors(['patient' => 'Người được chọn không phải là bệnh nhân.'])->withInput();
-        }
-
-        // 1. Tạo Appointment
-        $appointment = Appointment::create([
-            'patient_id'   => $patient->id,
-            'schedule_id'  => $slot->schedule_id,
-            'status'       => 'confirmed',
-            'symptoms'     => $validated['symptoms'] ?? null,
-            // 'note' => $validated['note'] ?? null, // Nếu có cột note
+    /**
+     * Gán thủ công bệnh nhân vào một slot trống
+     * POST /admin/slots/assign
+     */
+    public function assignSlot(Request $request)
+    {
+        $validated = $request->validate([
+            'slot_id'      => 'required|exists:schedule_slots,id',
+            'patient_id'   => 'required|exists:users,id',
+            'symptoms'     => 'nullable|string|max:500',
+        ], [
+            'slot_id.exists' => 'Suất khám không tồn tại.',
+            'patient_id.exists' => 'Bệnh nhân không tồn tại.',
         ]);
 
-        // 2. Cập nhật slot thành booked
-        $slot->update([
-            'status' => 'booked',
-            'appointment_id' => $appointment->id,
-        ]);
+        DB::beginTransaction();
+        try {
+            // 🔒 Lock row để tránh race condition
+            $slot = ScheduleSlot::where('id', $validated['slot_id'])
+                ->lockForUpdate()
+                ->first();
 
-        DB::commit();
-        return back()->with('success', '✅ Đã gán bệnh nhân vào suất khám thành công!');
+            // Kiểm tra slot còn trống không
+            if (!$slot || $slot->status !== 'available') {
+                DB::rollBack();
+                return back()->withErrors(['slot' => 'Suất khám này vừa được đặt hoặc đã khóa.'])->withInput();
+            }
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        \Log::error('Assign slot error: ' . $e->getMessage());
-        return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
+            // Kiểm tra bệnh nhân có role='patient' không
+            $patient = User::find($validated['patient_id']);
+            if (!$patient || $patient->role !== 'patient') {
+                DB::rollBack();
+                return back()->withErrors(['patient' => 'Người được chọn không phải là bệnh nhân.'])->withInput();
+            }
+
+            // 1. Tạo Appointment
+            $appointment = Appointment::create([
+                'patient_id'   => $patient->id,
+                'schedule_id'  => $slot->schedule_id,
+                'status'       => 'confirmed',
+                'symptoms'     => $validated['symptoms'] ?? null,
+                // 'note' => $validated['note'] ?? null, // Nếu có cột note
+            ]);
+
+            // 2. Cập nhật slot thành booked
+            $slot->update([
+                'status' => 'booked',
+                'appointment_id' => $appointment->id,
+            ]);
+
+            DB::commit();
+            return back()->with('success', '✅ Đã gán bệnh nhân vào suất khám thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Assign slot error: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
+        }
     }
-}
 }

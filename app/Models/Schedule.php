@@ -17,11 +17,17 @@ class Schedule extends Model
         'start_time',
         'end_time',
         'is_available',
+        'status',
+        'slot_duration_minutes',
+        'break_minutes',
+        'blocked_times',
+        'max_patients',
     ];
     // app/Models/Schedule.php
 
     protected $casts = [
         'work_date' => 'date', // Tự động convert về đối tượng Carbon
+        'blocked_times' => 'array',
     ];
     /**
      * Mối quan hệ: Một lịch làm việc thuộc về một bác sĩ
