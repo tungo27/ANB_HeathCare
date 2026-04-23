@@ -3,7 +3,7 @@
         <div class="row gy-4"> {{-- 'gy-4' giúp tạo khoảng cách giữa các hàng khi thu nhỏ màn hình --}}
             
             <div class="col-lg-4 col-md-6">
-                <h5 class="text-uppercase fw-bold mb-3">Phòng Khám Đa Khoa ABC</h5>
+                <h5 class="text-uppercase fw-bold mb-3">Phòng Khám Đa Khoa Anb</h5>
                 <p class="text-secondary pe-lg-4">
                     Chăm sóc sức khỏe tận tâm, uy tín và chuyên nghiệp. 
                     Luôn đồng hành cùng sức khỏe của bạn và gia đình.
@@ -37,7 +37,6 @@
                 <h5 class="text-uppercase fw-bold mb-3">Liên Kết</h5>
                 <ul class="list-unstyled">
                     <li class="mb-2"><a href="/" class="text-light text-decoration-none">Trang chủ</a></li>
-                    <li class="mb-2"><a href="/about" class="text-light text-decoration-none">Giới thiệu</a></li>
                     <li class="mb-2"><a href="/services" class="text-light text-decoration-none">Dịch vụ khám</a></li>
                     <li class="mb-2"><a href="/contact" class="text-light text-decoration-none">Đặt lịch hẹn</a></li>
                 </ul>
