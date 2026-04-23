@@ -10,13 +10,21 @@
             </a>
         </div>
 
+<<<<<<< HEAD
         <div class="card-body">
             {{-- 🔍 Filter --}}
             <form method="GET" class="row g-3 mb-4">
+=======
+    <div class="card-body">
+        {{-- 🔍 Filter --}}
+        <form method="GET" class="mb-4">
+            <div class="row g-3 align-items-end">
+>>>>>>> origin/Fix/block_slot
                 <div class="col-md-3">
                     <label class="form-label">Bác sĩ</label>
                     <select name="doctor_id" class="form-select">
                         <option value="">Tất cả</option>
+<<<<<<< HEAD
                         @foreach ($doctors as $doctor)
                             <option value="{{ $doctor->user_id }}"
                                 {{ request('doctor_id') == $doctor->user_id ? 'selected' : '' }}>
@@ -29,10 +37,28 @@
                     <label class="form-label">Ngày</label>
                     <input type="date" name="date" class="form-control" value="{{ request('date') }}">
                 </div>
+=======
+                        @foreach($doctors as $doctor)
+                        <option value="{{ $doctor->user_id }}"
+                            {{ request('doctor_id') == $doctor->user_id ? 'selected' : '' }}>
+                            {{ $doctor->user->name ?? $doctor->user->full_name ?? 'Bác sĩ #' . $doctor->user_id }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Ngày</label>
+                    <input type="date" name="date" class="form-control"
+                        value="{{ request('date') }}">
+                </div>
+
+>>>>>>> origin/Fix/block_slot
                 <div class="col-md-2">
                     <label class="form-label">Trạng thái</label>
                     <select name="status" class="form-select">
                         <option value="">Tất cả</option>
+<<<<<<< HEAD
                         <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Published</option>
                         <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>Closed</option>
@@ -45,6 +71,23 @@
                     <a href="{{ route('admin.schedules.index') }}" class="btn btn-outline-secondary w-100">↺ Reset</a>
                 </div>
             </form>
+=======
+                        <option value="draft" {{ request('status')=='draft'?'selected':'' }}>Draft</option>
+                        <option value="published" {{ request('status')=='published'?'selected':'' }}>Published</option>
+                        <option value="closed" {{ request('status')=='closed'?'selected':'' }}>Closed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">🔍 Lọc</button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ route('admin.schedules.index') }}" class="btn btn-outline-secondary w-100">↺ Reset</a>
+                </div>
+            </div>
+        </form>
+>>>>>>> origin/Fix/block_slot
 
             {{-- 📊 Table --}}
             <div class="table-responsive">

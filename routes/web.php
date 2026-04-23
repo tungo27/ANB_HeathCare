@@ -65,7 +65,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::post('/slots/assign', [AdminController::class, 'assignSlot'])->name('slots.assign');
         Route::post('/{schedule}/generate-slots', [AdminController::class, 'generateSlots'])->name('generate-slots');
         Route::post('/slots/{slot}/toggle', [AdminController::class, 'toggleSlotStatus'])->name('slots.toggle');
-        Route::post('/slots/bulk-action', [AdminController::class, 'bulkSlotAction'])->name('slots.bulk-action');
+
+        Route::post('/slots/{slot}/block', [AdminController::class, 'blockSlot'])->name('slots.block');
+        Route::post('/slots/{slot}/unblock', [AdminController::class, 'unblockSlot'])->name('slots.unblock');
+        Route::post('/slots/{slot}/cancel-appointment', [AdminController::class, 'cancelSlotAppointment'])->name('slots.cancel-appointment');
     });
 
     // 📊 Báo cáo

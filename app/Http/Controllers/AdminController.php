@@ -13,6 +13,8 @@ use App\Http\Requests\UpdateDoctorRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Request;
@@ -195,8 +197,34 @@ class AdminController extends Controller
     public function showSlots(Schedule $schedule)
     {
         $schedule->load(['slots.appointment.patient', 'doctor.user']);
-        $patients = User::where('role', 'patient')
+
+        // ✅ Pre-calculate is_past cho từng slot
+        $now = now();
+        $schedule->slots->each(function ($slot) use ($now, $schedule) {
+            // ✅ Xử lý slot_end_time có thể là time hoặc datetime
+            $endTimeStr = $slot->slot_end_time;
+
+            // Nếu slot_end_time đã là datetime, chỉ lấy phần time
+            if (strpos($endTimeStr, ' ') !== false) {
+                // '2026-04-23 08:30:00' → '08:30:00'
+                $endTimeStr = explode(' ', $endTimeStr)[1];
+            }
+
+            // Lấy work_date (chỉ phần ngày)
+            $workDate = \Carbon\Carbon::parse($schedule->work_date)->format('Y-m-d');
+
+            // Ghép lại: '2026-04-24 08:30:00'
+            $slotEndTime = \Carbon\Carbon::parse("{$workDate} {$endTimeStr}");
+
+            $slot->is_past = $slotEndTime->isPast();
+            $slot->is_editable = !$slot->is_past && $slot->status !== 'maintenance';
+        });
+
+        $schedule->slots = $schedule->slots->sortBy('slot_number');
+
+        $patients = \App\Models\User::where('role', 'patient')
             ->select('id', 'full_name as name', 'phone')
+            ->orderBy('full_name')
             ->get();
 
         return view('admin.schedules.slots', compact('schedule', 'patients'));
@@ -286,32 +314,43 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'status' => $newStatus]);
     }
 
-    // ⚡ Bulk action cho slots
     public function bulkSlotAction(Request $request)
     {
         $validated = $request->validate([
             'schedule_id' => 'required|exists:schedules,id',
             'new_status' => 'required|in:available,blocked,maintenance',
-            'scope' => 'required|in:all,filtered,selected',
+            'scope' => 'required|in:all,editable,filtered,selected',
             'slot_ids' => 'nullable|array',
             'note' => 'nullable|string|max:255',
         ]);
 
         $query = ScheduleSlot::where('schedule_id', $validated['schedule_id']);
 
+        // Filter theo scope
         if ($validated['scope'] === 'selected' && !empty($validated['slot_ids'])) {
             $query->whereIn('id', $validated['slot_ids']);
+        } elseif ($validated['scope'] === 'editable') {
+            // ✅ Chỉ update slots chưa kết thúc
+            $now = now();
+            $query->whereRaw("CONCAT(
+            (SELECT work_date FROM schedules WHERE id = schedule_slots.schedule_id), 
+            ' ', 
+            slot_end_time
+        ) > ?", [$now->format('Y-m-d H:i:s')]);
         } elseif ($validated['scope'] === 'filtered') {
-            // Giả sử frontend gửi thêm filter status
             if ($request->filled('filter_status')) {
                 $query->where('status', $request->filter_status);
             }
         }
 
-        // Chỉ update slots chưa booked để tránh hủy lịch bệnh nhân
+        // ✅ Không update slots đã booked để tránh hủy lịch
         $affected = $query->where('status', '!=', 'booked')->update([
             'status' => $validated['new_status'],
-            'internal_note' => $validated['note'],
+            'internal_note' => $validated['note']
+                ? DB::raw("CONCAT(IFNULL(internal_note, ''), '\n[Bulk: " . addslashes($validated['note']) . " - " . now()->format('d/m H:i') . "]')")
+                : null,
+            'updated_by' => Auth::id(),
+            'updated_at' => now(),
         ]);
 
         return back()->with('success', "Đã cập nhật {$affected} slots.");
@@ -384,6 +423,174 @@ class AdminController extends Controller
             DB::rollBack();
             Log::error('Assign slot error: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function blockSlot(Request $request, $slotId)
+    {
+        try {
+            $slot = ScheduleSlot::with('schedule')->findOrFail($slotId);
+
+            $isPast = $this->checkIsSlotPast($slot);
+
+            if ($isPast) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể thay đổi slot đã kết thúc.'
+                ], 403);
+            }
+
+            // ✅ CHECK 2: Chỉ block slot đang available
+            if ($slot->status !== 'available') {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Slot không ở trạng thái available (hiện tại: {$slot->status})"
+                ], 400);
+            }
+
+            $slot->status = 'blocked';
+            $slot->internal_note = ($slot->internal_note ?? '') . "\n[Blocked by admin: " . now()->format('d/m H:i') . ']';
+            if (Auth::check()) {
+                $slot->updated_by = Auth::id();
+            }
+            $slot->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã block slot thành công',
+                'slot' => ['id' => $slot->id, 'status' => $slot->status]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[BLOCK] Error', ['message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function unblockSlot(Request $request, $slotId)
+    {
+        try {
+            $slot = ScheduleSlot::with('schedule')->findOrFail($slotId);
+
+            // ✅ Tính is_past thủ công
+            $isPast = $this->checkIsSlotPast($slot);
+
+            if ($isPast) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Slot đã kết thúc, không thể mở lại.'
+                ], 403);
+            }
+
+            // ✅ CHECK 2: Chỉ unblock slot đang blocked
+            if ($slot->status !== 'blocked') {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Slot không ở trạng thái blocked (hiện tại: {$slot->status})"
+                ], 400);
+            }
+
+            $slot->status = 'available';
+            $slot->internal_note = ($slot->internal_note ?? '') . "\n[Unblocked by admin: " . now()->format('d/m H:i') . ']';
+            if (Auth::check()) {
+                $slot->updated_by = Auth::id();
+            }
+            $slot->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã mở block slot',
+                'slot' => ['id' => $slot->id, 'status' => $slot->status]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[UNBLOCK] Error', ['message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * ❌ Hủy appointment trong slot
+     */
+    public function cancelSlotAppointment(Request $request, $slotId)
+    {
+        try {
+            $slot = ScheduleSlot::with('appointment')->findOrFail($slotId);
+
+            // ✅ Tính is_past thủ công
+            $isPast = $this->checkIsSlotPast($slot);
+
+            if ($isPast) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể hủy appointment của slot đã kết thúc.'
+                ], 403);
+            }
+
+            if ($slot->status !== 'booked' || !$slot->appointment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Slot này không có appointment để hủy'
+                ], 400);
+            }
+
+            $appointment = $slot->appointment;
+
+            DB::transaction(function () use ($slot, $appointment) {
+                // 1. Hủy appointment
+                $appointment->status = 'cancelled';
+                $appointment->cancellation_reason = 'Hủy bởi admin';
+                $appointment->cancelled_at = now();
+                if (Auth::check() && Schema::hasColumn('appointments', 'cancelled_by')) {
+                    $appointment->cancelled_by = Auth::id();
+                }
+                $appointment->save();
+
+                // 2. Giải phóng slot
+                $slot->status = 'available';
+                $slot->appointment_id = null;
+                $slot->internal_note = ($slot->internal_note ?? '') . "\n[Cancelled: " . now()->format('d/m H:i') . ']';
+                if (Auth::check() && Schema::hasColumn('schedule_slots', 'updated_by')) {
+                    $slot->updated_by = Auth::id();
+                }
+                $slot->save();
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã hủy appointment và giải phóng slot',
+                'slot' => ['id' => $slot->id, 'status' => $slot->status],
+                'appointment' => ['id' => $appointment->id, 'status' => $appointment->status]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('[CANCEL] Error', ['message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ✅ Helper method kiểm tra slot đã qua
+    private function checkIsSlotPast(ScheduleSlot $slot): bool
+    {
+        if (!$slot->schedule) {
+            return false;
+        }
+
+        try {
+            // Extract date từ work_date
+            $workDateStr = $slot->schedule->work_date;
+            if (strpos($workDateStr, ' ') !== false) {
+                $workDateStr = explode(' ', $workDateStr)[0];
+            }
+
+            // Extract time từ slot_end_time
+            $endTimeStr = $slot->slot_end_time;
+            if (strpos($endTimeStr, ' ') !== false) {
+                $endTimeStr = explode(' ', $endTimeStr)[1];
+            }
+
+            $slotEndTime = Carbon::parse("{$workDateStr} {$endTimeStr}");
+            return $slotEndTime->isPast();
+        } catch (\Exception $e) {
+            Log::error('checkIsSlotPast error', ['error' => $e->getMessage()]);
+            return false;
         }
     }
 }

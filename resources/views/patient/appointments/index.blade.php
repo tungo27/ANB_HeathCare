@@ -32,17 +32,17 @@
                                     <div class="text-sm font-medium text-gray-900">
                                         {{ $appointment->schedule?->doctor?->user?->full_name ?? 'N/A' }}
                                     </div>
-                                    <div class="text-sm text-gray-500">
+                                    {{-- <div class="text-sm text-gray-500">
                                         {{ $appointment->schedule?->doctor?->specialty?->name ?? 'N/A' }}
-                                    </div>
+                                    </div> --}}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">
                                         {{ \Carbon\Carbon::parse($appointment->schedule->work_date)->format('d/m/Y') }}
                                     </div>
-                                    <div class="text-sm text-gray-500">
+                                    {{-- <div class="text-sm text-gray-500">
                                         {{ $appointment->slot ? \Carbon\Carbon::parse($appointment->slot->slot_start_time)->format('H:i') : 'N/A' }}
-                                    </div>
+                                    </div> --}}
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900">

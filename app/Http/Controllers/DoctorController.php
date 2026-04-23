@@ -205,21 +205,20 @@ class DoctorController extends Controller
         $appointment->load(['patient', 'schedule', 'slot', 'followUpAppointment', 'cancelledBy']);
 
         // ✅ Load available slots cho follow-up modal
-        $availableSlots = \App\Models\Schedule::where('doctor_id', Auth::id())
-            ->where('work_date', '>=', now()->format('Y-m-d'))
-            ->where('work_date', '<=', now()->addDays(7)->format('Y-m-d'))
-            ->whereDoesntHave('appointment', function ($q) {
-                $q->whereNotIn('status', ['cancelled', 'rejected', 'no_show']);
+        $availableSlots = \App\Models\ScheduleSlot::where('status', 'available')
+            ->whereHas('schedule', function ($query) {
+                $query->where('doctor_id', Auth::id())
+                    ->where('status', 'published')
+                    ->where('work_date', '>=', now()->format('Y-m-d'))
+                    ->where('work_date', '<=', now()->addDays(14)->format('Y-m-d'));
             })
-
-            ->orderBy('work_date')
-            ->orderBy('start_time')
-            ->get(['id', 'work_date', 'start_time', 'end_time'])
-            ->map(function ($s) {
+            ->with('schedule:id,work_date')
+            ->get()
+            ->sortBy(['schedule.work_date', 'slot_start_time'])
+            ->map(function ($slot) {
                 return [
-                    'id' => $s->id,
-                    'label' => \Carbon\Carbon::parse($s->work_date)->format('d/m/Y') . ' | ' . $s->start_time . '-' . $s->end_time,
-                   'datetime' => \Carbon\Carbon::parse(\Carbon\Carbon::parse($s->work_date)->toDateString() . ' ' . $s->start_time)->format('Y-m-d H:i:s'),
+                    'id' => $slot->id,
+                    'label' => \Carbon\Carbon::parse($slot->schedule->work_date)->format('d/m/Y') . ' | ' . \Carbon\Carbon::parse($slot->slot_start_time)->format('H:i'),
                 ];
             });
 
@@ -282,20 +281,35 @@ class DoctorController extends Controller
         }
 
         $validated = $request->validate([
-            'schedule_slot_id' => 'required|exists:schedules,id',
+            'schedule_slot_id' => 'required|exists:schedule_slots,id',
             'follow_up_note' => 'nullable|string|max:500',
         ]);
 
-        $newAppointment = DB::transaction(function () use ($validated, $appointment) {
+        $errorMessage = null;
+        $newAppointment = DB::transaction(function () use ($validated, $appointment, &$errorMessage) {
+            // 1. 🔒 Lock và kiểm tra slot
+            $slot = \App\Models\ScheduleSlot::with('schedule')
+                ->lockForUpdate()
+                ->find($validated['schedule_slot_id']);
+
+            // Kiểm tra slot có tồn tại, còn trống và thuộc về bác sĩ này không
+            if (!$slot || $slot->status !== 'available' || $slot->schedule->doctor_id !== Auth::id()) {
+                $errorMessage = 'Suất khám không hợp lệ hoặc đã có người khác đặt.';
+                return null; // Sẽ được kiểm tra bên ngoài transaction
+            }
+
             // ✅ Tạo appointment mới
             $new = Appointment::create([
                 'patient_id' => $appointment->patient_id,
-                'schedule_id' => $validated['schedule_slot_id'],
+                'schedule_id' => $slot->schedule_id, // Lấy schedule_id từ slot
                 'status' => 'confirmed',
                 'symptoms' => 'Theo dõi sau khám: ' . ($appointment->diagnosis_result ?? $appointment->symptoms ?? ''),
                 'note' => $validated['follow_up_note'],
                 'rescheduled_from_id' => $appointment->id, // 🔗 Link ngược về appointment gốc
             ]);
+
+            // ✅ Cập nhật slot: booked và gán appointment_id
+            $slot->update(['status' => 'booked', 'appointment_id' => $new->id]);
 
             // ✅ Cập nhật appointment gốc: đánh dấu đã có follow-up
             $appointment->update([
@@ -305,6 +319,11 @@ class DoctorController extends Controller
 
             return $new;
         });
+
+        // Nếu transaction trả về null (do lỗi), quay lại với lỗi
+        if (!$newAppointment) {
+            return back()->withInput()->with('error', $errorMessage);
+        }
 
         return back()->with('success', "✅ Đã đặt lịch hẹn lại #{$newAppointment->id} thành công!");
     }
