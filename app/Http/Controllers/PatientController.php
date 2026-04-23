@@ -27,29 +27,6 @@ class PatientController extends Controller
         return view('patient.dashboard', compact('doctors', 'specialties'));
     }
 
-    public function search(Request $request)
-    {
-        $specialties = Specialties::all();
-        $search = trim($request->get('search', ''));
-
-        $query = Doctor::with(['user', 'specialty']);
-
-        if ($search !== '') {
-            $query->where(function ($query) use ($search) {
-                $query->whereHas('user', function ($query) use ($search) {
-                    $query->where('full_name', 'like', "%{$search}%");
-                })
-                ->orWhereHas('specialty', function ($query) use ($search) {
-                    $query->where('name', $search);
-                });
-            });
-        }
-
-        $doctors = $query->paginate(12)->withQueryString();
-        $searchTerm = $search;
-        return view('patient.search', compact('doctors', 'searchTerm'));
-    }
-
     // Hiển thị trang chọn suất khám (Slots)
     public function selectSlot(Doctor $doctor, Request $request)
     {
@@ -77,7 +54,7 @@ class PatientController extends Controller
 
         $availableSlots = $query->get();
 
-        return view('patient.Booking.select-slot', compact('doctor', 'availableSlots'));
+        return view('patient.booking.select-slot', compact('doctor', 'availableSlots'));
     }
 
     // Xử lý lưu đặt lịch (Atomic Transaction)
@@ -106,9 +83,9 @@ class PatientController extends Controller
                 'patient_id'      => Auth::id(),
 
 
-                // ✅ GIỮ LẠI CÁC DÒNG NÀY:
+                //  GIỮ LẠI CÁC DÒNG NÀY:
                 'schedule_id'     => $slot->schedule_id,
-                'status'          => 'pending',
+                'status'          => 'confirmed',
                 'symptoms'        => $request->symptoms,
             ]);
 
@@ -118,16 +95,37 @@ class PatientController extends Controller
                 'appointment_id' => $appointment->id,
             ]);
 
-            return redirect()->route('patient.appointments.index')
+            return redirect()->route('patient.dashboard')
                 ->with('success', '🎉 Đặt lịch thành công! Mã lịch hẹn: #' . $appointment->id);
         });
     }
+    public function search(Request $request)
+    {
+        $specialties = Specialties::all();
+        $search = trim($request->get('search', ''));
 
+        $query = Doctor::with(['user', 'specialty']);
+
+        if ($search !== '') {
+            $query->where(function ($query) use ($search) {
+                $query->whereHas('user', function ($query) use ($search) {
+                    $query->where('full_name', 'like', "%{$search}%");
+                })
+                    ->orWhereHas('specialty', function ($query) use ($search) {
+                        $query->where('name', $search);
+                    });
+            });
+        }
+
+        $doctors = $query->paginate(12)->withQueryString();
+        $searchTerm = $search;
+        return view('patient.search', compact('doctors', 'searchTerm'));
+    }
     // Các hàm bổ trợ khác (Search, Appointments list...)
     public function myAppointments()
     {
         $appointments = Appointment::where('patient_id', Auth::id())
-            ->with(['doctor.user', 'doctor.specialty', 'schedule', 'slot'])
+            ->with(['schedule.doctor.user', 'schedule.doctor.specialty', 'slot'])
             ->latest()
             ->get();
         return view('patient.appointments.index', compact('appointments'));

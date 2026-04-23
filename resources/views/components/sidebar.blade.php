@@ -4,7 +4,7 @@
     <div class="sb-brand">
         <a href="{{ route('admin.dashboard') }}" class="sb-brand-link">
             <x-application-logo class="sb-logo-img" />
-            <span class="sb-name">MedApp</span>
+            <span class="sb-name">ANB_HealthCare</span>
         </a>
     </div>
 
@@ -81,16 +81,17 @@
         </a>
 
         {{-- 🔔 Thông báo --}}
-        <a href="#" class="nav-item disabled" title="Sắp triển khai">
+        {{-- <a href="#" class="nav-item disabled" title="Sắp triển khai">
             <span class="nav-icon">
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M8 2a4 4 0 0 0-4 4v2.5c0 .7-.3 1.4-.8 1.9L2 11.5h12l-1.2-1.1c-.5-.5-.8-1.2-.8-1.9V6a4 4 0 0 0-4-4Z" />
+                    <path
+                        d="M8 2a4 4 0 0 0-4 4v2.5c0 .7-.3 1.4-.8 1.9L2 11.5h12l-1.2-1.1c-.5-.5-.8-1.2-.8-1.9V6a4 4 0 0 0-4-4Z" />
                     <path d="M6 14a2 2 0 0 0 4 0" />
                 </svg>
             </span>
             {{ __('Thông báo') }}
             <span class="badge badge-sm bg-danger ms-auto">3</span>
-        </a>
+        </a> --}}
 
         {{-- 🚪 Logout --}}
         <form method="POST" action="{{ route('logout') }}">

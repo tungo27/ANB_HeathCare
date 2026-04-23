@@ -22,10 +22,9 @@
                         </div>
                     </div>
                     <div class="ms-4">
-                        <h4 class="mb-1">Bác sĩ: {{ $doctor->user->name }}</h4>
+                        <h4 class="mb-1">Bác sĩ: {{ $doctor->user->full_name }}</h4>
                         <p class="text-muted mb-0">
-                            <span
-                                class="badge bg-light text-primary border">{{ $doctor->specialty->name ?? 'Đa khoa' }}</span>
+                            <span class="badge bg-light text-primary border">{{ $doctor->specialty?->name ?? 'N/A' }}</span>
                             @if ($doctor->years_of_experience)
                                 <span class="ms-2 small"><i class="bi bi-clock-history"></i>
                                     {{ $doctor->years_of_experience }} năm kinh nghiệm</span>
