@@ -276,4 +276,6 @@ class DoctorController extends Controller
 
         return back()->with('success', "✅ Đã đặt lịch hẹn lại #{$newAppointment->id} thành công!");
     }
+
+    
 }

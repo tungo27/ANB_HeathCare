@@ -13,6 +13,7 @@ use App\Http\Requests\UpdateDoctorRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Exception;
 use Illuminate\Http\Request;
@@ -386,4 +387,120 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'Lỗi hệ thống: ' . $e->getMessage()])->withInput();
         }
     }
+
+   public function blockSlot(Request $request, $slotId)
+{
+    try {
+        // ✅ Manual find thay vì Route Model Binding
+        $slot = \App\Models\ScheduleSlot::findOrFail($slotId);
+        
+        // Kiểm tra slot có available không
+        if ($slot->status !== 'available') {
+            return response()->json([
+                'success' => false,
+                'message' => "Slot không ở trạng thái available (hiện tại: {$slot->status})"
+            ], 400);
+        }
+
+        $slot->update([
+            'status' => 'blocked',
+            'internal_note' => ($slot->internal_note ?? '') . "\n[Blocked by admin: " . now()->format('d/m H:i') . ']',
+            'updated_by' => Auth::user()->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã block slot thành công',
+            'slot' => $slot->fresh(['id', 'status', 'internal_note', 'updated_at'])
+        ]);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['success' => false, 'message' => 'Slot không tồn tại'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+    }
+}
+
+/**
+ * 🔓 Unblock một slot
+ * POST /admin/schedules/slots/{slot}/unblock
+ */
+public function unblockSlot(Request $request, $slotId)
+{
+    try {
+        $slot = \App\Models\ScheduleSlot::findOrFail($slotId);
+        
+        if ($slot->status !== 'blocked') {
+            return response()->json([
+                'success' => false,
+                'message' => "Slot không ở trạng thái blocked"
+            ], 400);
+        }
+
+        $slot->update([
+            'status' => 'available',
+            'updated_by' => Auth::user()->user_id,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã mở block slot',
+            'slot' => $slot->fresh(['id', 'status', 'updated_at'])
+        ]);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['success' => false, 'message' => 'Slot không tồn tại'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+    }
+}
+
+/**
+ * ❌ Hủy appointment trong slot
+ * POST /admin/schedules/slots/{slot}/cancel-appointment
+ */
+public function cancelSlotAppointment(Request $request, $slotId)
+{
+    try {
+        $slot = \App\Models\ScheduleSlot::findOrFail($slotId);
+        
+        if ($slot->status !== 'booked' || !$slot->appointment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Slot này không có appointment để hủy'
+            ], 400);
+        }
+
+        $appointment = $slot->appointment;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($slot, $appointment) {
+            // 1. Hủy appointment
+            $appointment->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => 'Hủy bởi admin',
+                'cancelled_at' => now(),
+                'cancelled_by' => Auth::user()->user_id,
+            ]);
+
+            // 2. Giải phóng slot
+            $slot->update([
+                'status' => 'available',
+                'appointment_id' => null,
+                'internal_note' => ($slot->internal_note ?? '') . "\n[Appointment cancelled by admin: " . now()->format('d/m H:i') . ']',
+            ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã hủy appointment và giải phóng slot',
+            'slot' => $slot->fresh(),
+            'appointment' => $appointment->fresh()
+        ]);
+        
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json(['success' => false, 'message' => 'Slot không tồn tại'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
+    }
+}
 }
