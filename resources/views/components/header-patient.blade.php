@@ -1,13 +1,13 @@
 <header class="sticky top-0 z-50 w-full bg-white border-b flex items-center justify-between px-8 py-4 shadow-sm">
-    <div class="flex items-center space-x-3">
-        <div
-            class="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-sm">
-            V</div>
-        <div class="d-none d-sm-block">
-            <h1 class="font-bold text-gray-800 leading-tight m-0" style="font-size: 1.25rem;">V-Hospital</h1>
-            <p class="text-sm text-gray-500 m-0">Hệ thống quản lý bệnh viện</p>
-        </div>
+    {{-- Brand --}}
+    <div class="sb-brand">
+        <a href="{{ route('admin.dashboard') }}" class="sb-brand-link">
+            <x-application-logo class="sb-logo-img" />
+            <span class="sb-name">ANB_HealthCare</span>
+        </a>
     </div>
+
+
 
     <nav class="d-none d-md-flex align-items-center gap-4">
         @php
@@ -24,7 +24,8 @@
             Danh sách bác sĩ
         </a>
         {{-- <a href="{{ route( Auth::user()->role . '.Appointment') }}" class="{{ $navClass }} {{ $inactiveClass }}">Đặt lịch khám</a> --}}
-        <a href="#" class="{{ $navClass }} {{ $inactiveClass }}">Lịch sử khám</a>
+        <a href="{{ route('patient.appointments.index') }}" class="{{ $navClass }} {{ $inactiveClass }}">Lịch sử
+            khám</a>
     </nav>
 
     <div class="dropdown">
