@@ -82,8 +82,6 @@ class PatientController extends Controller
             $appointment = Appointment::create([
                 'patient_id'      => Auth::id(),
 
-                // ❌ XÓA DÒNG NÀY NGAY LẬP TỨC:
-                // 'doctor_id'    => $slot->schedule->doctor_id, 
 
                 // ✅ GIỮ LẠI CÁC DÒNG NÀY:
                 'schedule_id'     => $slot->schedule_id,
