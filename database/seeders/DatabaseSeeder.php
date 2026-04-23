@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ServiceSeeder::class,
             ScheduleSeeder::class,
             AppointmentSeeder::class,
+            ScheduleSlotSeeder::class,
         ]);
     }
 }

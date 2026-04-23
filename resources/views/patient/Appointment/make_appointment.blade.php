@@ -1,6 +1,26 @@
 @extends('layouts.patient')
 
 @section('content')
+    <div class="specialty-section">
+        <h2>Chọn chuyên khoa</h2>
+        <div class="specialty-grid">
+
+            <a href="#" class="specialty-card active" data-id="1" onclick="selectSpecialty(event, this, 1)">
+
+                <span class="specialty-name">Nội khoa</span>
+            </a>
+
+            <a href="#" class="specialty-card" data-id="2" onclick="selectSpecialty(event, this, 2)">
+
+                <span class="specialty-name">Nhi khoa</span>
+            </a>
+
+            <a href="#" class="specialty-card" data-id="3" onclick="selectSpecialty(event, this, 3)">
+
+                <span class="specialty-name">Sản khoa</span>
+            </a>
+
+            <a href="#" class="specialty-card" data-id="4" onclick="selectSpecialty(event, this, 4)">
 
 <div class="specialty-section">
     <h2>Chọn chuyên khoa</h2>
@@ -41,14 +61,30 @@
             <span class="specialty-name">Nhãn khoa</span>
         </a>
 
-    </div>
-</div>
+            <a href="#" class="specialty-card" data-id="5" onclick="selectSpecialty(event, this, 5)">
 
-{{-- Doctor section, ẩn mặc định --}}
-<div id="doctor-section" style="display:none; margin-top:20px;">
-    <div class="specialty-section">
-        <h2>Chọn bác sĩ</h2>
-        <div id="doctor-grid" class="doctor-grid"></div>
+                <span class="specialty-name">Răng Hàm Mặt</span>
+            </a>
+
+            <a href="#" class="specialty-card" data-id="6" onclick="selectSpecialty(event, this, 6)">
+
+                <span class="specialty-name">Chấn thương chỉnh hình</span>
+            </a>
+
+            <a href="#" class="specialty-card" data-id="7" onclick="selectSpecialty(event, this, 7)">
+
+                <span class="specialty-name">Nhãn khoa</span>
+            </a>
+
+        </div>
+    </div>
+
+    {{-- Doctor section, ẩn mặc định --}}
+    <div id="doctor-section" style="display:none; margin-top:20px;">
+        <div class="specialty-section">
+            <h2>Chọn bác sĩ</h2>
+            <div id="doctor-grid" class="doctor-grid"></div>
+        </div>
     </div>
 </div>
 

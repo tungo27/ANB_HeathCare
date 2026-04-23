@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}" >
     <link rel="stylesheet" href="{{ asset('css/patient.css') }}">
     <link rel="stylesheet" href="{{ asset('css/doctor.css')}}">
+    <link rel="stylesheet" href="{{ asset('css/admin.css')}}">
 
     @vite(['public/css/app.css', 'public/js/app.js'])
 </head>

@@ -3,60 +3,163 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ShiftAssignment;
 use App\Models\Schedule;
 use App\Models\Appointment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
 
 class DoctorController extends Controller
 {
-    // app/Http/Controllers/DoctorController.php
-
-    public function index(Request $request)
+    public function dashboard()
     {
-        // 1. Khởi tạo query lấy lịch của bác sĩ đang đăng nhập
-        $query = Schedule::where('doctor_id', Auth::id());
+        $doctor = Auth::user()->doctor;
+        $assignments = $doctor->shiftAssignments()->with('shift')->where('status', 'pending')->get();
+        $appointments = Appointment::whereHas('schedule', function ($query) use ($doctor) {
+            $query->where('doctor_id', $doctor->user_id);
+        })
+            ->with(['patient', 'schedule.doctor']) // ✅ Load thêm doctor từ schedule nếu cần
+            ->get();
 
-        // 2. Kiểm tra tham số 'status' trên URL để lọc dữ liệu
-        // status=available hoặc ?status=booked
-        if ($request->has('status')) {
-            if ($request->status === 'available') {
-                $query->where('status', 1);
-            } elseif ($request->status === 'booked') {
-                $query->where('status', 2);
-            }
-        }
-
-        // 3. Sắp xếp và phân trang
-        // Quan trọng: Thêm withQueryString() để giữ bộ lọc khi người dùng bấm sang trang 2, 3...
-        $schedules = $query->orderBy('work_date', 'desc')
-            ->orderBy('start_time', 'asc')
-            ->paginate(10)
-            ->withQueryString();
-
-        // 4. Trả về view
-        return view('doctor.dashboard', compact('schedules'));
+        return view('doctor.dashboard', compact('assignments', 'appointments'));
     }
 
-    public function appointments(Request $request): View
+    public function acceptShift($id)
     {
-        // Lấy danh sách lịch hẹn của bác sĩ đang đăng nhập
-        // Giả sử bảng appointments có trường doctor_id liên kết với id của User(bác sĩ)
-        $query = Appointment::where('doctor_id', Auth::id());
+        $assignment = ShiftAssignment::findOrFail($id);
 
-        // Lọc theo trạng thái nếu có
-        if ($request->has('status') && $request->status !== 'all') {
-            $query->where('status', $request->status);
+        DB::transaction(function () use ($assignment) {
+            $assignment->update(['status' => 'accepted']);
+
+            $shift = $assignment->shift;
+            $start = Carbon::parse($assignment->work_date . ' ' . $shift->start_time);
+            $end = Carbon::parse($assignment->work_date . ' ' . $shift->end_time);
+
+            while ($start->copy()->addMinutes(30)->lte($end)) {
+                Schedule::create([
+                    'doctor_id' => $assignment->doctor_id,
+                    'work_date' => $assignment->work_date,
+                    'start_time' => $start->format('H:i:s'),
+                    'end_time' => $start->copy()->addMinutes(30)->format('H:i:s'),
+                    'is_available' => 1, // Free
+                ]);
+                $start->addMinutes(30);
+            }
+        });
+
+        return back()->with('success', 'Shift accepted and slots generated.');
+    }
+
+    public function rejectShift($id)
+    {
+        $assignment = ShiftAssignment::findOrFail($id);
+        $assignment->update(['status' => 'rejected']);
+        return back()->with('info', 'Shift rejected.');
+    }
+
+    public function appointments()
+    {
+        $query = Appointment::whereHas('schedule', function ($query) {
+            $query->where('doctor_id', Auth::id());
+        });
+        // ✅ Thêm lọc theo status nếu có param
+        if (request('status') && request('status') !== 'all') {
+            $query->where('status', request('status'));
         }
 
-        // Sắp xếp lịch hẹn mới nhất lên đầu và phân trang
-        $appointments = $query->orderBy('appointment_date', 'desc')
-            ->paginate(10)
-            ->withQueryString();
+        $appointments = $query->with(['patient', 'schedule'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
 
         return view('doctor.appointments', compact('appointments'));
+    }
+
+
+     public function index()
+    {
+        return view('doctor.schedule');
+    }
+
+     // 📡 API trả về events cho FullCalendar
+    public function calendarEvents()
+    {
+        $doctorId = Auth::user()->doctor->user_id;
+        $schedules = Schedule::where('doctor_id', $doctorId)
+            ->where('status', 'published')
+            ->get(['id', 'work_date', 'start_time', 'end_time']);
+
+        $events = $schedules->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'title' => "Ca khám: {$s->start_time} - {$s->end_time}",
+                'start' => "{$s->work_date}T{$s->start_time}",
+                'end' => "{$s->work_date}T{$s->end_time}",
+                'backgroundColor' => '#0d6efd',
+                'url' => route('doctor.schedule.detail', $s->id),
+            ];
+        });
+
+        return response()->json($events);
+    }
+
+     // 📋 Chi tiết ca + danh sách slots
+    public function detail(Schedule $schedule)
+    {
+        // Kiểm tra quyền: chỉ bác sĩ được phân ca mới xem được
+        if ($schedule->doctor_id !== Auth::user()->doctor->user_id) {
+            abort(403, 'Bạn không có quyền xem ca này.');
+        }
+
+        $schedule->load(['slots.appointment.patient', 'slots.appointment']);
+        return view('doctor.appointments.detail', compact('schedule'));
+    }
+
+      // 🩺 Hoàn tất khám & lưu kết quả
+    public function complete(Request $request, Appointment $appointment)
+    {
+        // Chỉ bác sĩ phụ trách mới được hoàn tất
+        if ($appointment->schedule->doctor_id !== Auth::user()->doctor->user_id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'diagnosis_result' => 'required|string|max:1000',
+            'note' => 'nullable|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+            $appointment->update([
+                'status' => 'completed',
+                'diagnosis_result' => $request->diagnosis_result,
+                // 'note' => $request->note, // Nếu có cột note
+            ]);
+        });
+
+        return back()->with('success', '✅ Đã lưu kết quả khám và hoàn tất lịch hẹn.');
+    }
+
+
+    // ❌ Hủy/Từ chối lịch hẹn (nếu cần)
+    public function cancel(Request $request, Appointment $appointment)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+        ]);
+
+        DB::transaction(function () use ($request, $appointment) {
+            $appointment->update([
+                'status' => 'rejected', // hoặc 'cancelled' tùy nghiệp vụ
+                'cancellation_reason' => $request->reason,
+                'cancelled_at' => now(),
+            ]);
+
+            // Giải phóng slot
+            $appointment->slot()->update(['status' => 'available', 'appointment_id' => null]);
+        });
+
+        return back()->with('success', 'Lịch hẹn đã được hủy.');
     }
 }

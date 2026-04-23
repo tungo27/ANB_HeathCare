@@ -11,24 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('doctor_id');
-            $table->string('room', 50)->nullable();
-            $table->date('work_date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->integer('slot_duration')->default(30);
-            $table->integer('max_patients')->default(10);
-            $table->boolean('is_available')->default(true);
-
-            $table->unique(['doctor_id', 'work_date', 'start_time'], 'uq_doctor_slot');
-            $table->unique(['room', 'work_date', 'start_time'], 'uq_room_slot');
-
-            $table->foreign('doctor_id')
-                ->references('user_id')->on('doctors')
-                ->onDelete('cascade');
-        });
+       Schema::create('schedules', function (Blueprint $table) {
+    $table->id();
+    $table->unsignedBigInteger('doctor_id');
+    $table->string('room', 20)->nullable();
+    $table->date('work_date');
+    $table->time('start_time');
+    $table->time('end_time');
+    // ❌ LOẠI BỎ is_available: Trạng thái sẽ được tính bằng cách CHECK tồn tại appointment
+    
+    $table->foreign('doctor_id')->references('user_id')->on('doctors')->onDelete('cascade');
+    // Index giúp query lịch nhanh theo ngày/bác sĩ
+    $table->index(['doctor_id', 'work_date']); 
+    $table->timestamps();
+});
     }
 
     /**

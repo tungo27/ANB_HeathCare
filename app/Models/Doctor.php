@@ -14,7 +14,7 @@ class Doctor extends Model
 
     protected $fillable = ['user_id', 'specialty_id', 'qualification', 'years_of_experience', 'consultation_fee', 'bio'];
 
-    
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -24,8 +24,13 @@ class Doctor extends Model
     {
         return $this->belongsTo(Specialties::class, 'specialty_id');
     }
+    public function shiftAssignments()
+    {
+        return $this->hasMany(ShiftAssignment::class, 'doctor_id', 'user_id');
+    }
+
     public function schedules()
     {
-        return $this->hasMany(Schedule::class, 'user_id', 'user_id');
+        return $this->hasMany(Schedule::class, 'doctor_id', 'user_id');
     }
 }

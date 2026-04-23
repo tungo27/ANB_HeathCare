@@ -10,8 +10,28 @@ class Appointment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'schedule_id', 'service_id',
-        'appointment_date', 'appointment_time',
+        'patient_id', 'doctor_id', 'schedule_id',
         'status', 'symptoms', 'note',
     ];
+
+    public function patient()
+    {
+        return $this->belongsTo(User::class, 'patient_id');
+    }
+
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'user_id');
+    }
+
+    public function schedule()
+    {
+        return $this->belongsTo(Schedule::class);
+    }
+
+    // ✅ Thêm quan hệ tới slot cụ thể
+    public function slot()
+    {
+        return $this->hasOne(ScheduleSlot::class, 'appointment_id');
+    }
 }

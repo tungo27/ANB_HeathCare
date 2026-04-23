@@ -1,0 +1,23 @@
+/* Table optimization */
+.table-nowrap td, .table-nowrap th {
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* Badge animation */
+.badge {
+    transition: all 0.2s ease;
+}
+
+/* Button group spacing */
+.btn-group .btn {
+    margin: 0 1px;
+}
+
+/* Tooltip custom */
+.tooltip-inner {
+    background-color: #1e293b;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
