@@ -163,25 +163,42 @@ class DoctorController extends Controller
         return back()->with('success', 'Lịch hẹn đã được hủy.');
     }
 
-      public function showAppointment(Appointment $appointment)
+     public function showAppointment(Appointment $appointment)
     {
         // 🔐 Kiểm tra quyền: Chỉ bác sĩ được phân công mới xem được
         if ($appointment->schedule->doctor_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền xem lịch hẹn này.');
         }
 
-        // 📦 Load relationships cần thiết
-        $appointment->load(['patient', 'schedule','slot']);
+        $appointment->load(['patient', 'schedule', 'slot', 'followUp']);
 
-        return view('doctor.appointments.show', compact('appointment'));
+        // ✅ Load danh sách slot rảnh của bác sĩ để đặt lịch hẹn lại (7 ngày tới)
+        $availableSlots = Schedule::where('doctor_id', Auth::id())
+            ->where('is_available', true)
+            ->where('work_date', '>=', now()->format('Y-m-d'))
+            ->where('work_date', '<=', now()->addDays(7)->format('Y-m-d'))
+            ->whereDoesntHave('appointment', function ($q) {
+                $q->where('status', '!=', 'cancelled');
+            })
+            ->orderBy('work_date')
+            ->orderBy('start_time')
+            ->get(['id', 'work_date', 'start_time', 'end_time'])
+            ->map(function ($s) {
+                return [
+                    'id' => $s->id,
+                    'label' => Carbon::parse($s->work_date)->format('d/m/Y') . ' | ' . $s->start_time . '-' . $s->end_time,
+                    'datetime' => Carbon::parse($s->work_date . ' ' . $s->start_time)->format('Y-m-d H:i:s'),
+                ];
+            });
+
+        return view('doctor.appointments.show', compact('appointment', 'availableSlots'));
     }
 
     /**
      * Cập nhật trạng thái lịch hẹn (confirm/complete/cancel)
      */
-    public function updateStatus(Request $request, Appointment $appointment)
+     public function updateStatus(Request $request, Appointment $appointment)
     {
-        // 🔐 Validate quyền
         if ($appointment->schedule->doctor_id !== Auth::id()) {
             abort(403);
         }
@@ -191,7 +208,6 @@ class DoctorController extends Controller
             'diagnosis_result' => 'nullable|required_if:action,complete|string|max:2000',
             'note' => 'nullable|string|max:500',
             'cancellation_reason' => 'nullable|required_if:action,cancel|string|max:255',
-            'new_datetime' => 'nullable|required_if:action,reschedule|date|after:now',
         ]);
 
         DB::transaction(function () use ($validated, $appointment) {
@@ -200,33 +216,64 @@ class DoctorController extends Controller
                     'status' => 'confirmed',
                     'confirmed_at' => now(),
                 ]),
-
                 'complete' => $appointment->update([
                     'status' => 'completed',
                     'diagnosis_result' => $validated['diagnosis_result'],
                     'note' => $validated['note'] ?? null,
                     'completed_at' => now(),
                 ]),
-
                 'cancel' => $appointment->update([
                     'status' => 'cancelled',
                     'cancellation_reason' => $validated['cancellation_reason'],
                     'cancelled_at' => now(),
                     'cancelled_by' => Auth::id(),
                 ]),
-
                 'reschedule' => $appointment->update([
                     'status' => 'rescheduled',
-                    'note' => "Yêu cầu đổi lịch: {$validated['new_datetime']}",
+                    'note' => ($appointment->note ?? '') . "\n[Yêu cầu đổi lịch: " . now()->format('d/m/Y H:i') . ']',
                 ]),
             };
         });
 
         return back()->with('success', match ($validated['action']) {
             'confirm' => '✅ Đã xác nhận lịch hẹn',
-            'complete' => '✅ Đã hoàn tất khám và lưu kết quả',
+            'complete' => '✅ Đã lưu kết quả khám',
             'cancel' => '❌ Đã hủy lịch hẹn',
             'reschedule' => '🔄 Đã yêu cầu đổi lịch',
         });
+    }
+    
+    public function createFollowUp(Request $request, Appointment $appointment)
+    {
+        if ($appointment->schedule->doctor_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'schedule_slot_id' => 'required|exists:schedules,id',
+            'follow_up_note' => 'nullable|string|max:500',
+        ]);
+
+        $newAppointment = DB::transaction(function () use ($validated, $appointment) {
+            // ✅ Tạo appointment mới
+            $new = Appointment::create([
+                'patient_id' => $appointment->patient_id,
+                'schedule_id' => $validated['schedule_slot_id'],
+                'status' => 'confirmed',
+                'symptoms' => 'Theo dõi sau khám: ' . ($appointment->diagnosis_result ?? $appointment->symptoms ?? ''),
+                'note' => $validated['follow_up_note'],
+                'rescheduled_from_id' => $appointment->id, // 🔗 Link ngược về appointment gốc
+            ]);
+
+            // ✅ Cập nhật appointment gốc: đánh dấu đã có follow-up
+            $appointment->update([
+                'follow_up_appointment_id' => $new->id,
+                'note' => ($appointment->note ?? '') . "\n[Đã đặt lịch hẹn lại: #" . $new->id . ']',
+            ]);
+
+            return $new;
+        });
+
+        return back()->with('success', "✅ Đã đặt lịch hẹn lại #{$newAppointment->id} thành công!");
     }
 }

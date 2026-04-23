@@ -81,8 +81,8 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     Route::get('/', [DoctorController::class, 'dashboard'])->name('dashboard');
     Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
     Route::get('/appointments/{appointment}', [DoctorController::class, 'showAppointment'])->name('appointments.show');
-    Route::patch('/appointments/{appointment}/status', [DoctorController::class, 'updateStatus'])
-        ->name('appointments.update-status');
+    Route::patch('/appointments/{appointment}/status', [DoctorController::class, 'updateStatus'])->name('appointments.update-status');
+    Route::post('/appointments/{appointment}/follow-up', [DoctorController::class, 'createFollowUp'])->name('appointments.follow-up');
 
     // Shift assignments
     Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');
@@ -106,7 +106,7 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 // =====================================================
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
 
-    
+
     Route::get('/', [PatientController::class, 'index'])->name('dashboard');
     Route::get('/search', [PatientController::class, 'search'])->name('search');
 

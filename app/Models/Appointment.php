@@ -18,6 +18,9 @@ class Appointment extends Model
         // Nếu bảng appointments CÓ cột created_at/updated_at:
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',  
     ];
 
     public function patient()
