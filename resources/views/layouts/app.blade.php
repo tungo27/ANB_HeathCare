@@ -22,36 +22,18 @@
 </head>
 
 <body class="bg-light">
-    {{-- 1. Khung bao ngoài cùng: Thiết lập Flex Row (Nằm ngang) --}}
-    <div class="d-flex min-vh-100"> 
-
-        {{-- 2. SIDEBAR (Chỉ hiển thị nếu là Admin) --}}
+        <div class="d-flex min-vh-100"> 
         @if(auth()->check() && auth()->user()->role === 'admin')
             <div class="sidebar-wrapper" style="width: 250px; flex-shrink: 0;">
                 <x-sidebar />
             </div>
         @endif
-
-        {{-- 3. MAIN CONTENT WRAPPER: Khối này chứa nội dung và footer --}}
-        {{-- flex-grow-1 giúp nó tự động lấp đầy khoảng trống còn lại --}}
         <div class="d-flex flex-column flex-grow-1">
-            
-            {{-- Nội dung chính --}}
-           {{-- Nội dung chính --}}
-           <div class="d-flex flex-column flex-grow-1">
-    {{-- Nội dung chính --}}
-    <main class="flex-grow-1">
-        {{-- BỎ row và col-12 đi, chúng đang tạo ra khoảng cách thừa --}}
-        <div class="container-fluid py-4 px-3"> 
-             @yield('main_content')
-        </div>
-    </main>
-
-    {{-- Footer --}}
-    <x-footer />
-</div>
-
-            {{-- Footer (Giờ đây nó nằm trong "cột" nội dung, nên sẽ luôn thẳng hàng) --}}
+            <main class="flex-grow-1">
+                <div class="container-fluid py-4 px-3"> 
+                    @yield('main_content')
+                </div>
+            </main>
             <x-footer />
         </div>
 

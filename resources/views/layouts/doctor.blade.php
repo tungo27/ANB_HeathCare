@@ -2,14 +2,7 @@
 
 @section('main_content')
 @include('components.header-doctor')
-    <div class="min-vh-100 d-flex">
-
-        <div class="d-flex flex-column flex-grow-1">
-
-            <main class="main-content flex-grow-1 p-4">
-                @yield('content')
-            </main>
-
-        </div>
-    </div>
+    <main class="main-content flex-grow-1 p-4">
+        @yield('content')
+    </main>
 @endsection
