@@ -14,6 +14,12 @@ class Appointment extends Model
         'status', 'symptoms', 'note',
     ];
 
+    protected $casts = [
+        // Nếu bảng appointments CÓ cột created_at/updated_at:
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
     public function patient()
     {
         return $this->belongsTo(User::class, 'patient_id');

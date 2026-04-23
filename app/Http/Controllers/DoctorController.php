@@ -74,7 +74,7 @@ class DoctorController extends Controller
             ->paginate(10);
 
 
-        return view('doctor.appointments', compact('appointments'));
+        return view('doctor.appointments.appointments', compact('appointments'));
     }
 
 
@@ -161,5 +161,72 @@ class DoctorController extends Controller
         });
 
         return back()->with('success', 'Lịch hẹn đã được hủy.');
+    }
+
+      public function showAppointment(Appointment $appointment)
+    {
+        // 🔐 Kiểm tra quyền: Chỉ bác sĩ được phân công mới xem được
+        if ($appointment->schedule->doctor_id !== Auth::id()) {
+            abort(403, 'Bạn không có quyền xem lịch hẹn này.');
+        }
+
+        // 📦 Load relationships cần thiết
+        $appointment->load(['patient', 'schedule','slot']);
+
+        return view('doctor.appointments.show', compact('appointment'));
+    }
+
+    /**
+     * Cập nhật trạng thái lịch hẹn (confirm/complete/cancel)
+     */
+    public function updateStatus(Request $request, Appointment $appointment)
+    {
+        // 🔐 Validate quyền
+        if ($appointment->schedule->doctor_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'action' => 'required|in:confirm,complete,cancel,reschedule',
+            'diagnosis_result' => 'nullable|required_if:action,complete|string|max:2000',
+            'note' => 'nullable|string|max:500',
+            'cancellation_reason' => 'nullable|required_if:action,cancel|string|max:255',
+            'new_datetime' => 'nullable|required_if:action,reschedule|date|after:now',
+        ]);
+
+        DB::transaction(function () use ($validated, $appointment) {
+            match ($validated['action']) {
+                'confirm' => $appointment->update([
+                    'status' => 'confirmed',
+                    'confirmed_at' => now(),
+                ]),
+
+                'complete' => $appointment->update([
+                    'status' => 'completed',
+                    'diagnosis_result' => $validated['diagnosis_result'],
+                    'note' => $validated['note'] ?? null,
+                    'completed_at' => now(),
+                ]),
+
+                'cancel' => $appointment->update([
+                    'status' => 'cancelled',
+                    'cancellation_reason' => $validated['cancellation_reason'],
+                    'cancelled_at' => now(),
+                    'cancelled_by' => Auth::id(),
+                ]),
+
+                'reschedule' => $appointment->update([
+                    'status' => 'rescheduled',
+                    'note' => "Yêu cầu đổi lịch: {$validated['new_datetime']}",
+                ]),
+            };
+        });
+
+        return back()->with('success', match ($validated['action']) {
+            'confirm' => '✅ Đã xác nhận lịch hẹn',
+            'complete' => '✅ Đã hoàn tất khám và lưu kết quả',
+            'cancel' => '❌ Đã hủy lịch hẹn',
+            'reschedule' => '🔄 Đã yêu cầu đổi lịch',
+        });
     }
 }
