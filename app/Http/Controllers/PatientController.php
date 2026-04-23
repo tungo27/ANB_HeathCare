@@ -132,7 +132,7 @@ class PatientController extends Controller
         // Lấy tất cả schedules của bác sĩ vào ngày chọn
         $schedules = $doctor->schedules()
             ->where('work_date', $date)
-            ->whereIn('status', ['published'])
+            // ->whereIn('status', ['published'])
             ->get();
 
         // Lấy available slots từ các schedules đó
@@ -149,7 +149,7 @@ class PatientController extends Controller
             $availableSlots = $availableSlots->filter(fn($s) => $s->slot_start_time >= '13:00:00');
         }
 
-        return view('patient.booking.select-slot', compact('doctor', 'availableSlots'));
+        return view('patient.booking', compact('doctor', 'availableSlots'));
     }
 
       // ✅ Xác nhận đặt lịch (Atomic Transaction)

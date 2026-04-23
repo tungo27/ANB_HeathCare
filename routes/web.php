@@ -108,7 +108,7 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 // 👤 PATIENT ROUTES
 // =====================================================
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
-    Route::get('/booking/{id}', [PatientController::class, 'booking'])->name('booking');
+    Route::get('/booking/{id}', [PatientController::class, 'index'])->name('booking');
     
     // Dashboard + Search doctors
     Route::get('/', [PatientController::class, 'index'])->name('dashboard');
@@ -117,8 +117,9 @@ Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')
     // 🎯 Booking với Schedule Slots
     Route::prefix('booking')->name('booking.')->group(function () {
         Route::get('/doctors', [PatientController::class, 'listDoctors'])->name('doctors');
-        Route::get('/doctors/{doctor:username}/slots', [PatientController::class, 'selectSlot'])->name('select-slot');
-        Route::post('/confirm', [PatientController::class, 'bookWithSlot'])->name('confirm');
+// Sửa dòng này:
+Route::get('/doctors/{doctor}/slots', [PatientController::class, 'selectSlot'])->name('select-slot');
+Route::post('/confirm', [PatientController::class, 'bookWithSlot'])->name('confirm');
     });
     
     // Quản lý lịch hẹn đã đặt

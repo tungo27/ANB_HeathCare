@@ -6,8 +6,8 @@
     {{-- 📍 Breadcrumb --}}
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('patient.home') }}">Trang chủ</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('patient.doctors.show', $doctor->user_id) }}">
+            <li class="breadcrumb-item"><a href="{{ route('patient.dashboard') }}">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('doctor.schedule', $doctor->user_id) }}">
                 {{ $doctor->user->name }}
             </a></li>
             <li class="breadcrumb-item active">Đặt lịch khám</li>
@@ -39,7 +39,7 @@
                     @endif
                 </div>
                 <div class="col-md-3 text-md-end">
-                    <a href="{{ route('patient.doctors.show', $doctor->user_id) }}" 
+                    <a href="{{ route('', $doctor->user_id) }}" 
                        class="btn btn-outline-secondary">← Chọn bác sĩ khác</a>
                 </div>
             </div>
