@@ -44,16 +44,7 @@
                 18 <span class="text-lg md:text-xl font-bold text-gray-600 ml-1">bác sĩ</span>
             </h2>
         </div>
-
-        {{-- Một chút trang trí bên phải (tùy chọn) để bớt trống trải --}}
-        <div class="hidden md:block text-teal-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-20" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                    d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 15h-2v-2h2v2zm0-4h-2V7h2v7z" />
-            </svg>
-        </div>
     </div>
-
     <div class="mb-12 text-left">
         <h3 class="text-2xl font-bold text-gray-800 mb-6">Chuyên khoa</h3>
         <div class="flex flex-wrap gap-4">
