@@ -7,7 +7,7 @@
         <div>
             <h5 class="mb-1">🎯 Quản lý suất khám</h5>
             <small class="text-muted">
-                👨‍⚕️ {{ $schedule->doctor->user->name }} |
+                👨‍⚕️ {{ $schedule->doctor->user->full_name }} |
                 📅 {{ \Carbon\Carbon::parse($schedule->work_date)->format('d/m/Y') }} |
                 ⏰ {{ $schedule->start_time }} - {{ $schedule->end_time }} |
                 🏥 {{ $schedule->room ?? 'Chưa chỉ định' }}
@@ -144,9 +144,19 @@
                     </div>
 
                     {{-- Footer: Actions --}}
+                    {{-- Footer: Actions --}}
                     <div class="card-footer bg-transparent border-top-0 py-2">
                         <div class="btn-group w-100 btn-group-sm" role="group">
+
                             @if ($slot->status === 'available')
+                            @if($slot->is_past)
+                            {{-- Slot đã qua --}}
+                            <button type="button" class="btn btn-secondary w-100" disabled
+                                title="Slot đã kết thúc lúc {{ \Carbon\Carbon::parse($schedule->work_date)->format('d/m/Y') . ' ' . $slot->slot_end_time }}">
+                                🔒 Đã kết thúc
+                            </button>
+                            @else
+                            {{-- Slot chưa qua --}}
                             <button type="button" class="btn btn-outline-danger toggle-slot"
                                 data-action="block" title="Block slot này">
                                 🔒Khoá
@@ -154,22 +164,40 @@
                             <button type="button" class="btn btn-outline-primary toggle-slot"
                                 data-action="assign" title="Gán appointment thủ công" data-bs-toggle="modal"
                                 data-bs-target="#assignModal" data-slot-id="{{ $slot->id }}">
-                                👤Gán bệnh nhân
+                                👤Gán
                             </button>
+                            @endif
+
                             @elseif($slot->status === 'blocked')
+                            @if($slot->is_past)
+                            <button type="button" class="btn btn-secondary w-100" disabled
+                                title="Slot đã kết thúc">
+                                🔒 Đã kết thúc
+                            </button>
+                            @else
                             <button type="button" class="btn btn-outline-success toggle-slot"
                                 data-action="unblock" title="Mở block">
-                                🔓Blocked
+                                🔓Mở
                             </button>
+                            @endif
+
                             @elseif($slot->status === 'booked')
-                            <a href="#" class="btn btn-outline-primary" title="Xem chi tiết">
+                            @if($slot->is_past)
+                            <button type="button" class="btn btn-secondary w-100" disabled
+                                title="Slot đã kết thúc">
+                                ✅ Đã khám
+                            </button>
+                            @else
+                            <button type="button" class="btn btn-outline-primary" disabled title="Xem chi tiết">
                                 👁️Đã đặt
-                            </a>
+                            </button>
                             <button type="button" class="btn btn-outline-danger toggle-slot"
                                 data-action="cancel" title="Hủy appointment này">
                                 ❌Huỷ
                             </button>
                             @endif
+                            @endif
+
                         </div>
                     </div>
                 </div>
