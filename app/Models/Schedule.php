@@ -56,4 +56,11 @@ class Schedule extends Model
     {
         return $this->belongsTo(User::class, 'doctor_id', 'id');
     }
+
+       public function appointment()
+    {
+        return $this->hasOne(Appointment::class, 'schedule_id');
+    }
+
+    
 }

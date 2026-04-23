@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // =====================================================
-// 👨‍💼 ADMIN ROUTES
+// ADMIN ROUTES
 // =====================================================
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
@@ -73,7 +73,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // =====================================================
-// 👨‍⚕️ DOCTOR ROUTES (ĐÃ SỬA TÊN METHOD CHO KHỚP)
+// DOCTOR ROUTES 
 // =====================================================
 Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->group(function () {
 
@@ -81,14 +81,13 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     Route::get('/', [DoctorController::class, 'dashboard'])->name('dashboard');
     Route::get('/appointments', [DoctorController::class, 'appointments'])->name('appointments');
     Route::get('/appointments/{appointment}', [DoctorController::class, 'showAppointment'])->name('appointments.show');
+    Route::patch('/appointments/{appointment}/status', [DoctorController::class, 'updateStatus'])->name('appointments.update-status');
+    Route::post('/appointments/{appointment}/follow-up', [DoctorController::class, 'createFollowUp'])->name('appointments.follow-up');
 
     // Shift assignments
     Route::post('/accept-shift/{id}', [DoctorController::class, 'acceptShift'])->name('accept_shift');
     Route::post('/reject-shift/{id}', [DoctorController::class, 'rejectShift'])->name('reject_shift');
 
-    // 📅 Lịch làm việc với Schedule Slots
-    // ✅ SỬA: scheduleIndex() → index() (method đã có trong controller)
-    // ✅ SỬA: scheduleDetail() → detail() (method đã có trong controller)
     Route::prefix('schedule')->name('schedule.')->group(function () {
         Route::get('/', [DoctorController::class, 'index'])->name('index');
         Route::get('/api/events', [DoctorController::class, 'calendarEvents'])->name('api.events');
@@ -96,8 +95,6 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
     });
 
     // 🩺 Xử lý khám bệnh (complete/cancel appointment)
-    // ✅ SỬA: completeAppointment() → complete()
-    // ✅ SỬA: cancelAppointment() → cancel()
     Route::prefix('appointments')->name('appointments.')->group(function () {
         Route::put('/{appointment}/complete', [DoctorController::class, 'complete'])->name('complete');
         Route::put('/{appointment}/cancel', [DoctorController::class, 'cancel'])->name('cancel');
@@ -109,19 +106,13 @@ Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->g
 // =====================================================
 Route::middleware(['auth', 'role:patient'])->prefix('patient')->name('patient.')->group(function () {
 
-    // Dashboard + Search
+
     Route::get('/', [PatientController::class, 'index'])->name('dashboard');
     Route::get('/search', [PatientController::class, 'search'])->name('search');
 
-    // 🎯 Booking Process
     Route::prefix('booking')->name('booking.')->group(function () {
-        // Route hiển thị danh sách bác sĩ
         Route::get('/doctors', [PatientController::class, 'index'])->name('doctors');
-
-        // Route hiển thị các slot trống của 1 bác sĩ cụ thể
         Route::get('/doctors/{doctor}/slots', [PatientController::class, 'selectSlot'])->name('select-slot');
-
-        // Route xử lý lưu đặt lịch (Action của form trong Modal)
         Route::post('/confirm', [PatientController::class, 'bookWithSlot'])->name('confirm');
     });
 
