@@ -22,10 +22,21 @@
 </head>
 
 <body class="bg-light">
-    <div class="min-vh-100 d-flex flex-column">
-            <div class="row justify-content-center">
-                    @yield('main_content')
+        <div class="d-flex min-vh-100"> 
+        @if(auth()->check() && auth()->user()->role === 'admin')
+            <div class="sidebar-wrapper" style="width: 250px; flex-shrink: 0;">
+                <x-sidebar />
             </div>
+        @endif
+        <div class="d-flex flex-column flex-grow-1">
+            <main class="flex-grow-1">
+                <div class="container-fluid py-4 px-3"> 
+                    @yield('main_content')
+                </div>
+            </main>
+            <x-footer />
+        </div>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

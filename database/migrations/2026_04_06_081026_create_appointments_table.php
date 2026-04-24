@@ -19,6 +19,7 @@ return new class extends Migration
 
             // ✅ MỞ RỘNG status: Hỗ trợ đầy đủ luồng tương tác
             $table->enum('status', [
+                'pending',
                 'confirmed',      // Đã đặt thành công
                 'completed',      // Đã khám xong
                 'cancelled',      // Bệnh nhân huỷ

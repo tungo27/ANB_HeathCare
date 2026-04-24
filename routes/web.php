@@ -76,7 +76,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // =====================================================
-// DOCTOR ROUTES 
+// DOCTOR ROUTES
 // =====================================================
 Route::middleware(['auth', 'role:doctor'])->prefix('doctor')->name('doctor.')->group(function () {
 
