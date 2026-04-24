@@ -10,5 +10,21 @@
     background-color: #f0fdfa; /* Nền xanh ngọc cực nhạt cho header bảng */
     color: #0d9488;
 }
+.footer-custom {
+    background-color: #00796b; /* Đây là mã màu gần nhất với nút trong ảnh của bạn */
+    color: #ffffff;
+}
 
+.footer-custom .text-secondary {
+    color: #e0e0e0 !important; /* Chỉnh màu chữ phụ cho sáng hơn, dễ đọc trên nền xanh */
+}
+
+.footer-custom a {
+    transition: 0.3s;
+}
+
+.footer-custom a:hover {
+    color: #b2dfdb !important; /* Hiệu ứng hover cho link */
+    text-decoration: underline !important;
+}
 
